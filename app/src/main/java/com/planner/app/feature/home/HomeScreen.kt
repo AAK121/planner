@@ -1,7 +1,5 @@
 package com.planner.app.feature.home
 
-import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -14,124 +12,107 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.planner.app.core.components.*
-import com.planner.app.core.theme.serifGreeting
 import com.planner.app.core.utils.DateUtils.toDisplayString
 import com.planner.app.domain.model.LogStatus
 
 @Composable
-fun HomeScreen(
+fun HomeContent(
+    innerPadding: PaddingValues,
     onNavigateToLog: (String) -> Unit,
     onNavigateToCreate: () -> Unit,
     onNavigateToAnalytics: (String) -> Unit,
-    onNavigateToDashboard: () -> Unit,
-    onNavigateToCalendar: () -> Unit,
-    onNavigateToSettings: () -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        floatingActionButton = {
-            PlannerFab(onClick = onNavigateToCreate)
-        },
-        bottomBar = {
-            PlannerBottomBar(
-                currentRoute = "home",
-                onNavigate = { screen ->
-                    when (screen.route) {
-                        "dashboard" -> onNavigateToDashboard()
-                        "calendar"  -> onNavigateToCalendar()
-                        "settings"  -> onNavigateToSettings()
-                        else        -> {}
-                    }
-                },
+    LazyColumn(
+        contentPadding = innerPadding,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        item {
+            HomeHeader(
+                username = state.username,
+                dateLabel = state.today.toDisplayString(),
+                progressFraction = state.progressFraction,
+                doneCount = state.doneCount,
+                totalCount = state.totalCount,
+                onNavigateToSettings = onNavigateToSettings,
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { innerPadding ->
-        LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            // Header
-            item {
-                HomeHeader(
-                    dateLabel = state.today.toDisplayString(),
-                    progressFraction = state.progressFraction,
-                    doneCount = state.doneCount,
-                    totalCount = state.totalCount,
-                    onSettingsClick = onNavigateToSettings,
-                )
-            }
+        }
 
-            val pending = state.activities.filter { activity ->
-                state.logs[activity.id]?.status != LogStatus.DONE
-            }
-            val done = state.activities.filter { activity ->
-                state.logs[activity.id]?.status == LogStatus.DONE
-            }
+        val pending = state.activities.filter { activity ->
+            state.logs[activity.id]?.status.let { it == null || it == LogStatus.PENDING }
+        }
+        val done = state.activities.filter { activity ->
+            state.logs[activity.id]?.status == LogStatus.DONE
+        }
 
-            if (pending.isNotEmpty()) {
-                item { SectionLabel(text = "Today") }
-            }
+        if (pending.isNotEmpty()) {
+            item { SectionLabel(text = "Today") }
+        }
 
-            itemsIndexed(pending) { _, activity ->
+        itemsIndexed(pending) { _, activity ->
+            ActivityItem(
+                activity = activity,
+                log = state.logs[activity.id],
+                streak = state.streaks[activity.id] ?: 0,
+                onToggleDone = { viewModel.toggleDone(activity) },
+                onItemClick = { onNavigateToLog(activity.id) },
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 28.dp),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            )
+        }
+
+        if (done.isNotEmpty()) {
+            item { SectionLabel(text = "Completed") }
+            itemsIndexed(done) { _, activity ->
                 ActivityItem(
                     activity = activity,
                     log = state.logs[activity.id],
                     streak = state.streaks[activity.id] ?: 0,
                     onToggleDone = { viewModel.toggleDone(activity) },
-                    onItemClick = { onNavigateToLog(activity.id) },
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 28.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    onItemClick = { onNavigateToAnalytics(activity.id) },
                 )
             }
-
-            if (done.isNotEmpty()) {
-                item { SectionLabel(text = "Completed") }
-                itemsIndexed(done) { _, activity ->
-                    ActivityItem(
-                        activity = activity,
-                        log = state.logs[activity.id],
-                        streak = state.streaks[activity.id] ?: 0,
-                        onToggleDone = { viewModel.toggleDone(activity) },
-                        onItemClick = { onNavigateToAnalytics(activity.id) },
-                    )
-                }
-            }
-
-            if (state.activities.isEmpty() && !state.isLoading) {
-                item {
-                    EmptyHome(onAddActivity = onNavigateToCreate)
-                }
-            }
-
-            item { Spacer(Modifier.height(80.dp)) }
         }
+
+        if (state.activities.isEmpty() && !state.isLoading) {
+            item { EmptyHome(onAddActivity = onNavigateToCreate) }
+        }
+
+        item { Spacer(Modifier.height(80.dp)) }
     }
 }
 
 @Composable
 private fun HomeHeader(
+    username: String,
     dateLabel: String,
     progressFraction: Float,
     doneCount: Int,
     totalCount: Int,
-    onSettingsClick: () -> Unit,
+    onNavigateToSettings: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 28.dp, end = 20.dp, top = 24.dp, bottom = 16.dp),
+            .padding(start = 28.dp, end = 4.dp, top = 24.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Good morning",
-                style = serifGreeting,
+                text = if (username.isBlank()) "Hey there," else "Hey, $username",
+                style = MaterialTheme.typography.displayMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = "Your tasks for today",
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
@@ -141,6 +122,8 @@ private fun HomeHeader(
             )
         }
 
+        Spacer(Modifier.width(8.dp))
+
         ProgressRing(
             fraction = progressFraction,
             size = 52.dp,
@@ -148,9 +131,7 @@ private fun HomeHeader(
             label = "$doneCount/$totalCount",
         )
 
-        Spacer(Modifier.width(8.dp))
-
-        IconButton(onClick = onSettingsClick) {
+        IconButton(onClick = onNavigateToSettings) {
             Icon(
                 imageVector = Icons.Outlined.Settings,
                 contentDescription = "Settings",

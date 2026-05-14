@@ -6,6 +6,7 @@ sealed class Screen(val route: String) {
     object Home        : Screen("home")
     object Dashboard   : Screen("dashboard")
     object Calendar    : Screen("calendar")
+    object Activities  : Screen("activities")
     object Settings    : Screen("settings")
 
     object CreateActivity : Screen("create_activity?activityId={activityId}") {

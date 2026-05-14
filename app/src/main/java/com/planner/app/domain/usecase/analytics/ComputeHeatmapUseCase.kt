@@ -22,7 +22,6 @@ class ComputeHeatmapUseCase @Inject constructor() {
             val intensity = when {
                 dayLogs.isEmpty() -> 0
                 dayLogs.any { it.status == LogStatus.DONE } -> 4
-                dayLogs.any { it.status == LogStatus.PARTIAL } -> 2
                 dayLogs.any { it.status == LogStatus.SKIPPED } -> 1
                 else -> 0
             }

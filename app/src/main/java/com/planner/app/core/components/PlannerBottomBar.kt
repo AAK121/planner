@@ -5,7 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -28,7 +28,7 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Home, "Home", Icons.Outlined.Home),
     BottomNavItem(Screen.Calendar, "Calendar", Icons.Outlined.CalendarMonth),
     BottomNavItem(Screen.Dashboard, "Stats", Icons.Outlined.BarChart),
-    BottomNavItem(Screen.Settings, "Settings", Icons.Outlined.Settings),
+    BottomNavItem(Screen.Activities, "Activities", Icons.AutoMirrored.Outlined.List),
 )
 
 @Composable

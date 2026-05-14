@@ -19,6 +19,7 @@ data class SettingsUiState(
     val llmCloudEnabled: Boolean = false,
     val llmProvider: String = "anthropic",
     val llmApiKey: String = "",
+    val username: String = "",
 )
 
 @HiltViewModel
@@ -27,28 +28,33 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = combine(
-        prefs.themeVariant,
-        prefs.notifReminders,
-        prefs.notifStreaks,
-        prefs.notifInsights,
-        prefs.notifCelebrations,
-        prefs.llmOnDeviceEnabled,
-        prefs.llmCloudEnabled,
-        prefs.llmProvider,
-        prefs.llmApiKey,
-    ) { values ->
-        @Suppress("UNCHECKED_CAST")
-        SettingsUiState(
-            themeVariant         = values[0] as ThemeVariant,
-            notifReminders       = values[1] as Boolean,
-            notifStreaks         = values[2] as Boolean,
-            notifInsights        = values[3] as Boolean,
-            notifCelebrations    = values[4] as Boolean,
-            llmOnDeviceEnabled   = values[5] as Boolean,
-            llmCloudEnabled      = values[6] as Boolean,
-            llmProvider          = values[7] as String,
-            llmApiKey            = values[8] as String,
-        )
+        combine(
+            prefs.themeVariant,
+            prefs.notifReminders,
+            prefs.notifStreaks,
+            prefs.notifInsights,
+            prefs.notifCelebrations,
+            prefs.llmOnDeviceEnabled,
+            prefs.llmCloudEnabled,
+            prefs.llmProvider,
+            prefs.llmApiKey,
+        ) { values ->
+            @Suppress("UNCHECKED_CAST")
+            SettingsUiState(
+                themeVariant         = values[0] as ThemeVariant,
+                notifReminders       = values[1] as Boolean,
+                notifStreaks         = values[2] as Boolean,
+                notifInsights        = values[3] as Boolean,
+                notifCelebrations    = values[4] as Boolean,
+                llmOnDeviceEnabled   = values[5] as Boolean,
+                llmCloudEnabled      = values[6] as Boolean,
+                llmProvider          = values[7] as String,
+                llmApiKey            = values[8] as String,
+            )
+        },
+        prefs.username,
+    ) { settings, username ->
+        settings.copy(username = username)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     fun setTheme(v: ThemeVariant) = launch { prefs.setThemeVariant(v) }
@@ -60,6 +66,7 @@ class SettingsViewModel @Inject constructor(
     fun setLlmCloud(v: Boolean) = launch { prefs.setLlmCloudEnabled(v) }
     fun setLlmProvider(v: String) = launch { prefs.setLlmProvider(v) }
     fun setLlmApiKey(v: String) = launch { prefs.setLlmApiKey(v) }
+    fun setUsername(v: String) = launch { prefs.setUsername(v) }
 
     private fun launch(block: suspend () -> Unit) { viewModelScope.launch { block() } }
 }

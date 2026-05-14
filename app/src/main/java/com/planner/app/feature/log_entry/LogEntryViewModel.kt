@@ -47,7 +47,7 @@ class LogEntryViewModel @Inject constructor(
             val existing = logRepository.getForActivityAndDay(activityId, LocalDate.now())
             _state.value = _state.value.copy(
                 activity = activity,
-                status = existing?.status ?: LogStatus.DONE,
+                status = existing?.status ?: LogStatus.PENDING,
                 durationMinutes = existing?.durationMinutes ?: 30,
                 data = existing?.data ?: emptyMap(),
                 note = existing?.note ?: "",

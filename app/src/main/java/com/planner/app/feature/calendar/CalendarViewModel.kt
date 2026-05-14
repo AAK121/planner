@@ -50,7 +50,7 @@ class CalendarViewModel @Inject constructor(
             logsForSelected = logsForSelected,
             isLoading = false,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CalendarUiState())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, CalendarUiState())
 
     fun selectDate(date: LocalDate) { _selectedDate.value = date }
     fun prevMonth() { _currentMonth.value = _currentMonth.value.minusMonths(1) }

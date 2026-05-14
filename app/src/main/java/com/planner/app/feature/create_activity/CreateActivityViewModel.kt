@@ -81,6 +81,7 @@ class CreateActivityViewModel @Inject constructor(
     fun setGoal(goal: Goal?)                 { _state.value = _state.value.copy(goal = goal) }
     fun nextStep()                           { _state.value = _state.value.copy(currentStep = _state.value.currentStep + 1) }
     fun prevStep()                           { _state.value = _state.value.copy(currentStep = (_state.value.currentStep - 1).coerceAtLeast(0)) }
+    fun goToStep(step: Int)                  { _state.value = _state.value.copy(currentStep = step.coerceIn(0, 3)) }
 
     fun save() {
         val s = _state.value

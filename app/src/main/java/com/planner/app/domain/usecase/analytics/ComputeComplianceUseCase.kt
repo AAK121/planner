@@ -22,7 +22,7 @@ class ComputeComplianceUseCase @Inject constructor() {
         logs: List<ActivityLog>,
         today: LocalDate = LocalDate.now(),
     ): ComplianceResult {
-        val doneStatuses = setOf(LogStatus.DONE, LogStatus.PARTIAL)
+        val doneStatuses = setOf(LogStatus.DONE)
 
         fun rateForDays(days: Long): Float {
             val from = today.minusDays(days - 1)

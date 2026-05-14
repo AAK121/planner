@@ -36,8 +36,9 @@ class OnboardingViewModel @Inject constructor(
     private val createActivity: CreateActivityUseCase,
 ) : ViewModel() {
 
-    fun completeOnboarding(selectedPresets: List<PresetTemplate>) {
+    fun completeOnboarding(selectedPresets: List<PresetTemplate>, username: String) {
         viewModelScope.launch {
+            if (username.isNotBlank()) prefs.setUsername(username.trim())
             selectedPresets.forEach { preset ->
                 createActivity(
                     Activity(

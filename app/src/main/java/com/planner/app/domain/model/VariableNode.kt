@@ -14,6 +14,7 @@ sealed class VariableNode {
         override val id: String,
         override val label: String,
         val children: List<VariableNode> = emptyList(),
+        val daysOfWeek: List<Int> = emptyList(), // 1=Mon…7=Sun, empty = every day
     ) : VariableNode()
 
     @Serializable

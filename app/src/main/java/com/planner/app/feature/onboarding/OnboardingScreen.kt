@@ -12,15 +12,18 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.planner.app.core.theme.ShapeCard
+import com.planner.app.core.theme.ShapeInput
 import com.planner.app.core.theme.ShapePill
 import kotlinx.coroutines.launch
 
@@ -30,15 +33,19 @@ private val slides = listOf(
     Triple("See your patterns", "Streaks, compliance heatmaps, and AI-powered weekly insights.", "📊"),
 )
 
+// Page indices: 0-2 = info slides, 3 = preset picker, 4 = name input
+private const val TOTAL_PAGES = 5
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
     onDone: () -> Unit,
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
-    val pagerState = rememberPagerState(pageCount = { slides.size + 1 })
+    val pagerState = rememberPagerState(pageCount = { TOTAL_PAGES })
     val scope = rememberCoroutineScope()
     val selectedPresets = remember { mutableStateListOf<PresetTemplate>() }
+    var username by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -49,20 +56,24 @@ fun OnboardingScreen(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f),
+            userScrollEnabled = false,
         ) { page ->
-            if (page < slides.size) {
-                SlidePage(
+            when {
+                page < slides.size -> SlidePage(
                     emoji = slides[page].third,
                     title = slides[page].first,
                     description = slides[page].second,
                 )
-            } else {
-                PresetPickerPage(
+                page == slides.size -> PresetPickerPage(
                     selected = selectedPresets,
                     onToggle = { preset ->
                         if (selectedPresets.contains(preset)) selectedPresets.remove(preset)
                         else selectedPresets.add(preset)
                     },
+                )
+                else -> NameInputPage(
+                    name = username,
+                    onNameChange = { username = it },
                 )
             }
         }
@@ -74,7 +85,7 @@ fun OnboardingScreen(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center,
         ) {
-            repeat(slides.size + 1) { index ->
+            repeat(TOTAL_PAGES) { index ->
                 val color by animateColorAsState(
                     if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.outline,
@@ -93,10 +104,10 @@ fun OnboardingScreen(
         // CTA button
         Button(
             onClick = {
-                if (pagerState.currentPage < slides.size) {
+                if (pagerState.currentPage < TOTAL_PAGES - 1) {
                     scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                 } else {
-                    viewModel.completeOnboarding(selectedPresets)
+                    viewModel.completeOnboarding(selectedPresets, username)
                     onDone()
                 }
             },
@@ -108,7 +119,7 @@ fun OnboardingScreen(
                 .height(52.dp),
         ) {
             Text(
-                text = if (pagerState.currentPage < slides.size) "Continue" else "Get started",
+                text = if (pagerState.currentPage < TOTAL_PAGES - 1) "Continue" else "Get started",
                 style = MaterialTheme.typography.titleMedium,
             )
         }
@@ -124,7 +135,12 @@ private fun SlidePage(emoji: String, title: String, description: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(text = emoji, style = MaterialTheme.typography.displayMedium.copy(fontSize = MaterialTheme.typography.displayMedium.fontSize * 2))
+        Text(
+            text = emoji,
+            style = MaterialTheme.typography.displayMedium.copy(
+                fontSize = MaterialTheme.typography.displayMedium.fontSize * 2,
+            ),
+        )
         Spacer(Modifier.height(32.dp))
         Text(
             text = title,
@@ -199,5 +215,41 @@ private fun PresetPickerPage(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NameInputPage(
+    name: String,
+    onNameChange: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 28.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "What should we call you?",
+            style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "We'll use this to personalise your experience.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(32.dp))
+        OutlinedTextField(
+            value = name,
+            onValueChange = onNameChange,
+            label = { Text("Your name") },
+            placeholder = { Text("e.g. Alex") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = ShapeInput,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        )
     }
 }

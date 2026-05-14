@@ -1,18 +1,22 @@
 package com.planner.app.feature.create_activity
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.planner.app.core.components.PlannerTopBar
 import com.planner.app.core.theme.ShapeInput
 import com.planner.app.core.theme.ShapePill
 import com.planner.app.domain.model.ActivityType
+import com.planner.app.domain.model.Goal
 import com.planner.app.feature.create_activity.components.SchedulePicker
 import com.planner.app.feature.create_activity.components.TemplatePicker
 import com.planner.app.feature.create_activity.components.VariableTreeEditor
@@ -46,8 +50,11 @@ fun CreateActivityScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 28.dp),
         ) {
-            // Step indicator
-            StepIndicator(currentStep = state.currentStep, steps = steps)
+            StepIndicator(
+                currentStep = state.currentStep,
+                steps = steps,
+                onStepClick = viewModel::goToStep,
+            )
 
             Spacer(Modifier.height(24.dp))
 
@@ -86,7 +93,6 @@ fun CreateActivityScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Next / Save button
             Button(
                 onClick = {
                     if (state.currentStep < steps.size - 1) viewModel.nextStep()
@@ -113,18 +119,13 @@ fun CreateActivityScreen(
 }
 
 @Composable
-private fun StepIndicator(currentStep: Int, steps: List<String>) {
+private fun StepIndicator(currentStep: Int, steps: List<String>, onStepClick: (Int) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         steps.forEachIndexed { index, label ->
-            val active = index == currentStep
-            val done   = index < currentStep
             FilterChip(
-                selected = active || done,
-                onClick = {},
-                enabled = false,
-                label = {
-                    Text(label, style = MaterialTheme.typography.labelMedium)
-                },
+                selected = index == currentStep || index < currentStep,
+                onClick = { onStepClick(index) },
+                label = { Text(label, style = MaterialTheme.typography.labelMedium) },
             )
         }
     }
@@ -155,7 +156,6 @@ private fun BasicsStep(
             singleLine = true,
         )
 
-        // Type selector
         Text("Type", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ActivityType.entries.forEach { t ->
@@ -200,18 +200,81 @@ private fun TrackingStep(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GoalStep(
-    goal: com.planner.app.domain.model.Goal?,
-    onGoalChange: (com.planner.app.domain.model.Goal?) -> Unit,
+    goal: Goal?,
+    onGoalChange: (Goal?) -> Unit,
 ) {
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Set a goal (optional)", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(16.dp))
         Text(
-            text = "Goals give you a target to work toward and show progress bars in analytics.",
+            text = "Goals give you a target to work toward and show progress in analytics.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+
+        if (goal == null) {
+            OutlinedButton(
+                onClick = { onGoalChange(Goal(targetValue = 1.0, unit = "", period = "daily")) },
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            ) {
+                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Add goal", style = MaterialTheme.typography.bodySmall)
+            }
+        } else {
+            var targetText by remember(goal.targetValue) {
+                mutableStateOf(
+                    if (goal.targetValue == goal.targetValue.toLong().toDouble())
+                        goal.targetValue.toLong().toString()
+                    else goal.targetValue.toString()
+                )
+            }
+
+            OutlinedTextField(
+                value = targetText,
+                onValueChange = { v ->
+                    val filtered = v.filter { it.isDigit() || it == '.' }
+                    targetText = filtered
+                    filtered.toDoubleOrNull()?.let { onGoalChange(goal.copy(targetValue = it)) }
+                },
+                label = { Text("Target value") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+                shape = ShapeInput,
+                singleLine = true,
+            )
+
+            OutlinedTextField(
+                value = goal.unit,
+                onValueChange = { onGoalChange(goal.copy(unit = it)) },
+                label = { Text("Unit") },
+                placeholder = { Text("e.g. minutes, reps, km") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = ShapeInput,
+                singleLine = true,
+            )
+
+            Text("Period", style = MaterialTheme.typography.titleMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("daily", "weekly", "monthly").forEach { period ->
+                    FilterChip(
+                        selected = goal.period == period,
+                        onClick = { onGoalChange(goal.copy(period = period)) },
+                        label = {
+                            Text(
+                                period.replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.labelMedium,
+                            )
+                        },
+                    )
+                }
+            }
+
+            TextButton(onClick = { onGoalChange(null) }) {
+                Text("Remove goal", color = MaterialTheme.colorScheme.error)
+            }
+        }
     }
 }

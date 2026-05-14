@@ -15,7 +15,7 @@ class ComputeCorrelationsUseCase @Inject constructor() {
         minSampleDays: Int = 14,
     ): List<ActivityCorrelation> {
         val doneByActivity = logs
-            .filter { it.status == LogStatus.DONE || it.status == LogStatus.PARTIAL }
+            .filter { it.status == LogStatus.DONE }
             .groupBy { it.activityId }
             .mapValues { (_, v) -> v.map { it.date }.toSet() }
 

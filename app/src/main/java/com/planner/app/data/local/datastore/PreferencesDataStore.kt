@@ -31,6 +31,7 @@ class PreferencesDataStore @Inject constructor(
         val NOTIF_STREAKS        = booleanPreferencesKey("notif_streaks")
         val NOTIF_INSIGHTS       = booleanPreferencesKey("notif_insights")
         val NOTIF_CELEBRATIONS   = booleanPreferencesKey("notif_celebrations")
+        val USERNAME             = stringPreferencesKey("username")
     }
 
     val themeVariant: Flow<ThemeVariant> = context.dataStore.data.map { prefs ->
@@ -73,6 +74,10 @@ class PreferencesDataStore @Inject constructor(
         prefs[Keys.NOTIF_CELEBRATIONS] ?: true
     }
 
+    val username: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[Keys.USERNAME] ?: ""
+    }
+
     suspend fun setThemeVariant(variant: ThemeVariant) {
         context.dataStore.edit { it[Keys.THEME_VARIANT] = variant.name }
     }
@@ -111,5 +116,9 @@ class PreferencesDataStore @Inject constructor(
 
     suspend fun setNotifCelebrations(enabled: Boolean) {
         context.dataStore.edit { it[Keys.NOTIF_CELEBRATIONS] = enabled }
+    }
+
+    suspend fun setUsername(name: String) {
+        context.dataStore.edit { it[Keys.USERNAME] = name }
     }
 }

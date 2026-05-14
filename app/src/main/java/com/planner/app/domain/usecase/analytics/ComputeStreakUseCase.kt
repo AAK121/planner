@@ -10,7 +10,7 @@ class ComputeStreakUseCase @Inject constructor() {
 
     operator fun invoke(logs: List<ActivityLog>, today: LocalDate = LocalDate.now()): StreakResult {
         val doneDays = logs
-            .filter { it.status == LogStatus.DONE || it.status == LogStatus.PARTIAL }
+            .filter { it.status == LogStatus.DONE }
             .map { it.date }
             .toSortedSet()
 

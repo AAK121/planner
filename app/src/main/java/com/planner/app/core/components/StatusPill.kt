@@ -21,8 +21,8 @@ fun StatusPill(
     modifier: Modifier = Modifier,
 ) {
     val label = when (status) {
+        LogStatus.PENDING -> "Pending"
         LogStatus.DONE    -> "Done"
-        LogStatus.PARTIAL -> "Partial"
         LogStatus.SKIPPED -> "Skip"
     }
 

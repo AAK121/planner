@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.FlowRow
 import com.planner.app.core.theme.ShapeCard
 import com.planner.app.core.theme.ShapeInput
 import com.planner.app.core.utils.newId
@@ -108,6 +109,11 @@ private fun NodeCard(
             when (node) {
                 is VariableNode.GroupNode -> {
                     Spacer(Modifier.height(12.dp))
+                    GroupDayPicker(
+                        selectedDays = node.daysOfWeek,
+                        onDaysChange = { onUpdate(node.copy(daysOfWeek = it)) },
+                    )
+                    Spacer(Modifier.height(8.dp))
                     VariableTreeEditor(
                         nodes = node.children,
                         onNodesChanged = { onUpdate(node.copy(children = it)) },
@@ -132,16 +138,70 @@ private fun NodeCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ValueTypeSelector(selected: ValueType, onSelect: (ValueType) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         ValueType.entries.forEach { type ->
             val isSelected = type == selected
             FilterChip(
                 selected = isSelected,
                 onClick = { onSelect(type) },
                 label = { Text(type.name.lowercase(), style = MaterialTheme.typography.labelMedium) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
+                    selectedBorderColor = MaterialTheme.colorScheme.primary,
+                    selectedBorderWidth = 1.5.dp,
+                ),
             )
+        }
+    }
+}
+
+@Composable
+private fun GroupDayPicker(
+    selectedDays: List<Int>,
+    onDaysChange: (List<Int>) -> Unit,
+) {
+    val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
+    Column {
+        Text(
+            text = if (selectedDays.isEmpty()) "Active every day" else "Active on selected days",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            dayLabels.forEachIndexed { index, label ->
+                val dayNum = index + 1
+                val isSelected = dayNum in selectedDays
+                FilterChip(
+                    selected = isSelected,
+                    onClick = {
+                        val updated = if (isSelected) selectedDays - dayNum else (selectedDays + dayNum).sorted()
+                        onDaysChange(updated)
+                    },
+                    label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isSelected,
+                        selectedBorderColor = MaterialTheme.colorScheme.primary,
+                        selectedBorderWidth = 1.5.dp,
+                    ),
+                )
+            }
         }
     }
 }

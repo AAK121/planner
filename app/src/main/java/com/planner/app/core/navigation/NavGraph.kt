@@ -1,20 +1,15 @@
 package com.planner.app.core.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.planner.app.feature.analytics.AnalyticsScreen
-import com.planner.app.feature.calendar.CalendarScreen
 import com.planner.app.feature.create_activity.CreateActivityScreen
-import com.planner.app.feature.dashboard.DashboardScreen
-import com.planner.app.feature.home.HomeScreen
 import com.planner.app.feature.log_entry.LogEntryScreen
+import com.planner.app.feature.main.MainScreen
 import com.planner.app.feature.onboarding.OnboardingScreen
 import com.planner.app.feature.settings.SettingsScreen
 import com.planner.app.feature.signin.SignInScreen
@@ -28,28 +23,38 @@ fun PlannerNavGraph(
 
         composable(Screen.Onboarding.route) {
             OnboardingScreen(
-                onDone = { navController.navigate(Screen.SignIn.route) {
-                    popUpTo(Screen.Onboarding.route) { inclusive = true }
-                }}
+                onDone = {
+                    navController.navigate(Screen.SignIn.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
+                }
             )
         }
 
         composable(Screen.SignIn.route) {
             SignInScreen(
-                onSignedIn = { navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.SignIn.route) { inclusive = true }
-                }}
+                onSignedIn = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.SignIn.route) { inclusive = true }
+                    }
+                }
             )
         }
 
+        // All main tabs (Home, Calendar, Stats, Activities) live inside MainScreen
         composable(Screen.Home.route) {
-            HomeScreen(
-                onNavigateToLog    = { id -> navController.navigate(Screen.LogEntry.route(id)) },
-                onNavigateToCreate = { navController.navigate(Screen.CreateActivity.route()) },
+            MainScreen(
+                onNavigateToLog       = { id -> navController.navigate(Screen.LogEntry.route(id)) },
+                onNavigateToCreate    = { navController.navigate(Screen.CreateActivity.route()) },
+                onNavigateToEdit      = { id -> navController.navigate(Screen.CreateActivity.route(id)) },
                 onNavigateToAnalytics = { id -> navController.navigate(Screen.Analytics.route(id)) },
-                onNavigateToDashboard = { navController.navigate(Screen.Dashboard.route) },
-                onNavigateToCalendar  = { navController.navigate(Screen.Calendar.route) },
                 onNavigateToSettings  = { navController.navigate(Screen.Settings.route) },
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
             )
         }
 
@@ -85,24 +90,6 @@ fun PlannerNavGraph(
                 onBack = { navController.popBackStack() },
                 onEditActivity = { id -> navController.navigate(Screen.CreateActivity.route(id)) },
             )
-        }
-
-        composable(Screen.Dashboard.route) {
-            DashboardScreen(
-                onBack = { navController.popBackStack() },
-                onActivityClick = { id -> navController.navigate(Screen.Analytics.route(id)) },
-            )
-        }
-
-        composable(Screen.Calendar.route) {
-            CalendarScreen(
-                onBack = { navController.popBackStack() },
-                onLogActivity = { id -> navController.navigate(Screen.LogEntry.route(id)) },
-            )
-        }
-
-        composable(Screen.Settings.route) {
-            SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

@@ -2,6 +2,7 @@ package com.planner.app.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.planner.app.data.local.datastore.PreferencesDataStore
 import com.planner.app.domain.model.Activity
 import com.planner.app.domain.model.ActivityLog
 import com.planner.app.domain.model.LogStatus
@@ -19,13 +20,14 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val activities: List<Activity> = emptyList(),
-    val logs: Map<String, ActivityLog> = emptyMap(),       // activityId → today's log
-    val streaks: Map<String, Int> = emptyMap(),            // activityId → current streak
+    val logs: Map<String, ActivityLog> = emptyMap(),
+    val streaks: Map<String, Int> = emptyMap(),
     val progressFraction: Float = 0f,
     val doneCount: Int = 0,
     val totalCount: Int = 0,
     val today: LocalDate = LocalDate.now(),
     val isLoading: Boolean = true,
+    val username: String = "",
 )
 
 @HiltViewModel
@@ -34,22 +36,21 @@ class HomeViewModel @Inject constructor(
     private val logRepository: LogRepository,
     private val logActivity: LogActivityUseCase,
     private val computeStreak: ComputeStreakUseCase,
+    private val prefs: PreferencesDataStore,
 ) : ViewModel() {
 
     private val today = LocalDate.now()
 
-    val uiState: StateFlow<HomeUiState> = getTodayActivities(today)
-        .flatMapLatest { activities ->
+    val uiState: StateFlow<HomeUiState> = combine(
+        getTodayActivities(today).flatMapLatest { activities ->
             logRepository.observeForDay(today).map { todayLogs ->
                 val logsByActivity = todayLogs.associateBy { it.activityId }
-                val streaks = activities.associate { activity ->
-                    activity.id to 0 // streaks computed lazily; full version loads per-activity logs
-                }
                 val doneCount = logsByActivity.values.count { it.status == LogStatus.DONE }
+                // Activities whose log is PENDING or absent are still "pending"
                 HomeUiState(
                     activities = activities,
                     logs = logsByActivity,
-                    streaks = streaks,
+                    streaks = activities.associate { it.id to 0 },
                     progressFraction = if (activities.isEmpty()) 0f
                                        else doneCount.toFloat() / activities.size,
                     doneCount = doneCount,
@@ -58,14 +59,17 @@ class HomeViewModel @Inject constructor(
                     isLoading = false,
                 )
             }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+        },
+        prefs.username,
+    ) { baseState, username ->
+        baseState.copy(username = username)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     fun toggleDone(activity: Activity) {
         viewModelScope.launch {
             val existing = logRepository.getForActivityAndDay(activity.id, today)
             if (existing != null) {
-                val newStatus = if (existing.status == LogStatus.DONE) LogStatus.SKIPPED else LogStatus.DONE
+                val newStatus = if (existing.status == LogStatus.DONE) LogStatus.PENDING else LogStatus.DONE
                 logActivity(existing.copy(status = newStatus))
             } else {
                 logActivity(
