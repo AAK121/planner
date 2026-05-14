@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 40px 20px;
+    font-family: 'DM Sans', sans-serif;
+    color: #e8e7e3;
+    flex-wrap: wrap;
+  }
+
+  .screen-label {
+    text-align: center; font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: #5a5950;
+    margin-bottom: 12px;
+  }
+
+  .phone {
+    width: 375px; min-height: 812px; background: #141413; border-radius: 40px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 20px 60px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 28px 0; font-size: 12px; font-weight: 600; color: #e8e7e3;
+  }
+
+  /* ========== DARK HOME ========== */
+  .header { padding: 28px 28px 0; }
+
+  .greeting {
+    font-family: 'Newsreader', serif; font-size: 14px; color: #5a5950;
+    font-style: italic; letter-spacing: 0.3px; margin-bottom: 4px;
+  }
+
+  .date-title {
+    font-size: 28px; font-weight: 600; letter-spacing: -0.5px; color: #e8e7e3;
+  }
+
+  .progress-ring {
+    margin: 20px 28px 4px; display: flex; align-items: center; gap: 14px;
+  }
+
+  .ring-container { position: relative; width: 48px; height: 48px; }
+
+  .ring-text {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; font-size: 14px; font-weight: 600; color: #e8e7e3;
+  }
+
+  .progress-detail { font-size: 14px; color: #9c9a92; }
+  .progress-detail span { font-weight: 600; color: #e8e7e3; }
+
+  .streak-bar { display: flex; gap: 16px; padding: 20px 28px; }
+
+  .streak-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: #1e1e1c; padding: 8px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 500; color: #9c9a92;
+  }
+
+  .streak-pill .num { color: #e8e7e3; font-weight: 600; }
+
+  .section-label {
+    padding: 8px 28px 12px; font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: #5a5950;
+  }
+
+  .activity-list { padding: 0 20px; }
+
+  .activity-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 12px; border-bottom: 0.5px solid #1e1e1c; cursor: pointer;
+  }
+
+  .activity-item:last-child { border-bottom: none; }
+
+  .check-circle {
+    width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #3a3a36;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  }
+
+  .check-circle.done { background: #e8e7e3; border-color: #e8e7e3; }
+
+  .activity-name { font-size: 16px; font-weight: 500; color: #e8e7e3; }
+  .activity-name.completed { color: #5a5950; text-decoration: line-through; text-decoration-color: #3a3a36; }
+
+  .activity-meta {
+    font-size: 12px; color: #5a5950; margin-top: 3px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .activity-time { font-size: 13px; color: #5a5950; font-weight: 500; flex-shrink: 0; }
+
+  .activity-chevron { color: #3a3a36; flex-shrink: 0; margin-left: 4px; }
+
+  .divider-line { height: 0.5px; background: #1e1e1c; margin: 8px 28px; }
+
+  .fab {
+    position: absolute; bottom: 100px; right: 24px;
+    width: 52px; height: 52px; background: #e8e7e3; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4); cursor: pointer;
+  }
+
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 12px 28px 34px; background: #141413;
+    border-top: 0.5px solid #1e1e1c;
+  }
+
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 500; color: #5a5950; cursor: pointer;
+  }
+  .nav-item.active { color: #e8e7e3; }
+
+  /* ========== DARK ANALYTICS ========== */
+  .analytics-header {
+    padding: 24px 24px 16px; border-bottom: 0.5px solid #1e1e1c;
+  }
+
+  .analytics-header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+
+  .back-btn-dark {
+    width: 32px; height: 32px; border-radius: 10px; background: #1e1e1c;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+
+  .analytics-header h2 { font-size: 18px; font-weight: 600; color: #e8e7e3; }
+  .analytics-header-sub { font-size: 13px; color: #5a5950; margin-left: 44px; }
+
+  .analytics-body { padding: 20px 24px; }
+
+  .stat-row { display: flex; gap: 10px; margin-bottom: 12px; }
+
+  .stat-card {
+    flex: 1; background: #1e1e1c; border-radius: 14px; padding: 16px;
+  }
+
+  .stat-value { font-size: 28px; font-weight: 600; letter-spacing: -1px; color: #e8e7e3; }
+  .stat-label { font-size: 12px; color: #5a5950; margin-top: 2px; }
+
+  .stat-change {
+    font-size: 11px; margin-top: 6px; display: flex; align-items: center; gap: 3px;
+    color: #7ac49a;
+  }
+
+  .a-section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #5a5950; margin: 20px 0 12px;
+  }
+
+  /* Heatmap dark */
+  .heatmap-body { display: flex; gap: 4px; }
+
+  .heatmap-days {
+    display: flex; flex-direction: column; gap: 3px;
+    font-size: 9px; color: #5a5950; width: 20px; flex-shrink: 0;
+  }
+  .heatmap-day-label { height: 12px; display: flex; align-items: center; }
+
+  .heatmap-grid { display: flex; gap: 3px; flex: 1; overflow: hidden; }
+  .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
+
+  .heatmap-cell { width: 12px; height: 12px; border-radius: 2px; background: #1e1e1c; }
+  .heatmap-cell.l1 { background: #2a2a26; }
+  .heatmap-cell.l2 { background: #5a5950; }
+  .heatmap-cell.l3 { background: #9c9a92; }
+  .heatmap-cell.l4 { background: #e8e7e3; }
+
+  .heatmap-legend {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 4px; margin-top: 8px; font-size: 10px; color: #5a5950;
+  }
+
+  .legend-cell { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* Compliance dark */
+  .compliance-periods { display: flex; gap: 6px; margin-bottom: 12px; }
+
+  .period-chip {
+    padding: 6px 12px; border-radius: 16px; font-size: 12px;
+    font-weight: 500; color: #5a5950; cursor: pointer;
+  }
+  .period-chip.active { background: #e8e7e3; color: #141413; }
+
+  .compliance-bar-bg {
+    width: 100%; height: 8px; background: #1e1e1c; border-radius: 4px; overflow: hidden;
+  }
+  .compliance-bar-fill { height: 100%; background: #e8e7e3; border-radius: 4px; }
+
+  .compliance-value { display: flex; justify-content: space-between; margin-top: 8px; }
+  .compliance-pct { font-size: 14px; font-weight: 600; color: #e8e7e3; }
+  .compliance-detail { font-size: 12px; color: #5a5950; }
+
+  /* Chart dark */
+  .chart-card-dark {
+    background: #1e1e1c; border-radius: 14px; padding: 16px; margin-bottom: 12px;
+  }
+
+  .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .chart-title { font-size: 14px; font-weight: 500; color: #e8e7e3; }
+  .chart-period { font-size: 11px; color: #5a5950; padding: 4px 10px; background: #2a2a26; border-radius: 10px; }
+
+  .chart-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+  .chart-label { font-size: 10px; color: #5a5950; }
+
+  /* Pattern dark */
+  .pattern-card-dark {
+    background: #1e1e1c; border-radius: 14px; padding: 16px; margin-bottom: 12px;
+  }
+  .pattern-icon { font-size: 18px; margin-bottom: 8px; }
+  .pattern-text { font-size: 14px; line-height: 1.5; color: #9c9a92; }
+  .pattern-highlight { font-weight: 600; color: #e8e7e3; }
+
+  .heatmap-months {
+    display: flex; gap: 0; margin-bottom: 6px; padding-left: 24px;
+  }
+  .heatmap-month {
+    font-size: 10px; color: #5a5950; width: calc((100% - 24px) / 6);
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== DARK HOME ===== -->
+<div>
+  <div class="screen-label">Home — dark</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#5a5950;">●●● 🔋</span>
+    </div>
+
+    <div class="header">
+      <div class="greeting">Good morning</div>
+      <div class="date-title">Monday, May 10</div>
+    </div>
+
+    <div class="progress-ring">
+      <div class="ring-container">
+        <svg width="48" height="48" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="20" fill="none" stroke="#1e1e1c" stroke-width="3"/>
+          <circle cx="24" cy="24" r="20" fill="none" stroke="#e8e7e3" stroke-width="3"
+            stroke-dasharray="125.6" stroke-dashoffset="62.8"
+            stroke-linecap="round" transform="rotate(-90 24 24)"/>
+        </svg>
+        <div class="ring-text">3/6</div>
+      </div>
+      <div class="progress-detail"><span>3 of 6</span> activities done today</div>
+    </div>
+
+    <div class="streak-bar">
+      <div class="streak-pill">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1C8 1 3 6 3 9.5C3 12.5 5.2 14.5 8 14.5C10.8 14.5 13 12.5 13 9.5C13 6 8 1 8 1Z" fill="#e8a44a" opacity="0.9"/></svg>
+        <span class="num">12</span> day streak
+      </div>
+      <div class="streak-pill">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L9.5 6H14L10.5 9L12 13.5L8 10.5L4 13.5L5.5 9L2 6H6.5L8 1.5Z" fill="#5a5950"/></svg>
+        <span class="num">4</span> best week
+      </div>
+    </div>
+
+    <div class="section-label">To do</div>
+    <div class="activity-list">
+      <div class="activity-item">
+        <div class="check-circle">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#3a3a36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div class="activity-name">Gym — Upper Body</div>
+          <div class="activity-meta">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1C8 1 3 6 3 9.5C3 12.5 5.2 14.5 8 14.5C10.8 14.5 13 12.5 13 9.5C13 6 8 1 8 1Z" fill="#e8a44a" opacity="0.7"/></svg>
+            12 days · Mon / Wed / Fri
+          </div>
+        </div>
+        <div class="activity-time">8:00 AM</div>
+        <div class="activity-chevron"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="activity-item">
+        <div class="check-circle"></div>
+        <div style="flex:1; min-width:0;">
+          <div class="activity-name">Read</div>
+          <div class="activity-meta">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1C8 1 3 6 3 9.5C3 12.5 5.2 14.5 8 14.5C10.8 14.5 13 12.5 13 9.5C13 6 8 1 8 1Z" fill="#e8a44a" opacity="0.7"/></svg>
+            30 days · Daily
+          </div>
+        </div>
+        <div class="activity-time">9:00 PM</div>
+        <div class="activity-chevron"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="activity-item">
+        <div class="check-circle"></div>
+        <div style="flex:1; min-width:0;">
+          <div class="activity-name">Meditate</div>
+          <div class="activity-meta">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1C8 1 3 6 3 9.5C3 12.5 5.2 14.5 8 14.5C10.8 14.5 13 12.5 13 9.5C13 6 8 1 8 1Z" fill="#e8a44a" opacity="0.7"/></svg>
+            7 days · Daily
+          </div>
+        </div>
+        <div class="activity-time">7:00 AM</div>
+        <div class="activity-chevron"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+    </div>
+
+    <div class="divider-line"></div>
+
+    <div class="section-label">Completed</div>
+    <div class="activity-list">
+      <div class="activity-item">
+        <div class="check-circle done">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#141413" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div class="activity-name completed">Morning Walk</div>
+          <div class="activity-meta">35 min · Done at 6:40 AM</div>
+        </div>
+        <div class="activity-chevron"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="activity-item">
+        <div class="check-circle done">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#141413" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div class="activity-name completed">Drink Water</div>
+          <div class="activity-meta">8 glasses · Done at 8:15 PM</div>
+        </div>
+        <div class="activity-chevron"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+    </div>
+
+    <div class="fab">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4V18M4 11H18" stroke="#141413" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9L12 2L21 9V20C21 20.5 20.5 21 20 21H4C3.5 21 3 20.5 3 20V9Z" stroke="currentColor" stroke-width="1.8" fill="currentColor" opacity="0.1"/><path d="M9 21V12H15V21" stroke="currentColor" stroke-width="1.8"/></svg>
+        Today
+      </div>
+      <div class="nav-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10H21" stroke="currentColor" stroke-width="1.8"/><path d="M8 2V6M16 2V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Calendar
+      </div>
+      <div class="nav-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20V14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Stats
+      </div>
+      <div class="nav-item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 1V3M12 21V23M4.2 4.2L5.6 5.6M18.4 18.4L19.8 19.8M1 12H3M21 12H23M4.2 19.8L5.6 18.4M18.4 5.6L19.8 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Settings
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DARK ANALYTICS ===== -->
+<div>
+  <div class="screen-label">Analytics — dark</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#5a5950;">●●● 🔋</span>
+    </div>
+
+    <div class="analytics-header">
+      <div class="analytics-header-top">
+        <div class="back-btn-dark">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="#e8e7e3" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h2>Gym</h2>
+      </div>
+      <div class="analytics-header-sub">Mon · Wed · Fri — 8:00 AM</div>
+    </div>
+
+    <div class="analytics-body">
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-value">12</div>
+          <div class="stat-label">Current streak</div>
+          <div class="stat-change">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2.5 4.5L5 2L7.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            +4 from last week
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">28</div>
+          <div class="stat-label">Longest streak</div>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-value">87%</div>
+          <div class="stat-label">Compliance (30d)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">48</div>
+          <div class="stat-label">Total sessions</div>
+        </div>
+      </div>
+
+      <div class="a-section-label">Activity map</div>
+      <div style="margin-bottom:8px;">
+        <div class="heatmap-months">
+          <div class="heatmap-month">Dec</div><div class="heatmap-month">Jan</div>
+          <div class="heatmap-month">Feb</div><div class="heatmap-month">Mar</div>
+          <div class="heatmap-month">Apr</div><div class="heatmap-month">May</div>
+        </div>
+        <div class="heatmap-body">
+          <div class="heatmap-days">
+            <div class="heatmap-day-label">M</div>
+            <div class="heatmap-day-label">W</div>
+            <div class="heatmap-day-label">F</div>
+          </div>
+          <div class="heatmap-grid" id="heatmap-dark"></div>
+        </div>
+        <div class="heatmap-legend">
+          Less
+          <div class="legend-cell" style="background:#1e1e1c"></div>
+          <div class="legend-cell" style="background:#2a2a26"></div>
+          <div class="legend-cell" style="background:#5a5950"></div>
+          <div class="legend-cell" style="background:#9c9a92"></div>
+          <div class="legend-cell" style="background:#e8e7e3"></div>
+          More
+        </div>
+      </div>
+
+      <div class="a-section-label">Compliance rate</div>
+      <div style="margin-bottom:16px;">
+        <div class="compliance-periods">
+          <div class="period-chip">7d</div>
+          <div class="period-chip active">30d</div>
+          <div class="period-chip">90d</div>
+          <div class="period-chip">All</div>
+        </div>
+        <div class="compliance-bar-bg">
+          <div class="compliance-bar-fill" style="width:87%"></div>
+        </div>
+        <div class="compliance-value">
+          <div class="compliance-pct">87%</div>
+          <div class="compliance-detail">11 of 13 scheduled days</div>
+        </div>
+      </div>
+
+      <div class="a-section-label">Variable trends</div>
+      <div class="chart-card-dark">
+        <div class="chart-header">
+          <div class="chart-title">Weight — Bench Press</div>
+          <div class="chart-period">30d</div>
+        </div>
+        <svg width="100%" height="120" viewBox="0 0 300 120">
+          <defs>
+            <linearGradient id="filldark" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e8e7e3" stop-opacity="0.12"/>
+              <stop offset="100%" stop-color="#e8e7e3" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="30" x2="300" y2="30" stroke="#2a2a26" stroke-width="0.5"/>
+          <line x1="0" y1="60" x2="300" y2="60" stroke="#2a2a26" stroke-width="0.5"/>
+          <line x1="0" y1="90" x2="300" y2="90" stroke="#2a2a26" stroke-width="0.5"/>
+          <path d="M0,90 L30,85 L60,80 L90,75 L120,70 L150,65 L180,55 L210,50 L240,45 L270,35 L300,30 L300,120 L0,120 Z" fill="url(#filldark)"/>
+          <path d="M0,90 L30,85 L60,80 L90,75 L120,70 L150,65 L180,55 L210,50 L240,45 L270,35 L300,30" fill="none" stroke="#e8e7e3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="0" cy="90" r="2.5" fill="#1e1e1c" stroke="#e8e7e3" stroke-width="1.2"/>
+          <circle cx="120" cy="70" r="2.5" fill="#1e1e1c" stroke="#e8e7e3" stroke-width="1.2"/>
+          <circle cx="240" cy="45" r="2.5" fill="#1e1e1c" stroke="#e8e7e3" stroke-width="1.2"/>
+          <circle cx="300" cy="30" r="3" fill="#e8e7e3"/>
+          <text x="4" y="28" font-size="9" fill="#5a5950" font-family="DM Sans">60kg</text>
+          <text x="4" y="58" font-size="9" fill="#5a5950" font-family="DM Sans">50kg</text>
+          <text x="4" y="88" font-size="9" fill="#5a5950" font-family="DM Sans">40kg</text>
+        </svg>
+        <div class="chart-labels">
+          <div class="chart-label">Apr 10</div>
+          <div class="chart-label">Apr 20</div>
+          <div class="chart-label">Apr 30</div>
+          <div class="chart-label">May 10</div>
+        </div>
+      </div>
+
+      <div class="a-section-label">Patterns</div>
+      <div class="pattern-card-dark">
+        <div class="pattern-icon">💡</div>
+        <div class="pattern-text">
+          You skip <span class="pattern-highlight">Fridays 40%</span> of the time. Your most consistent day is <span class="pattern-highlight">Wednesday</span> at 100%.
+        </div>
+      </div>
+
+      <div style="height:40px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const grid = document.getElementById('heatmap-dark');
+  const levels = ['', 'l1', 'l2', 'l3', 'l4'];
+  for (let w = 0; w < 24; w++) {
+    const col = document.createElement('div');
+    col.className = 'heatmap-col';
+    for (let d = 0; d < 3; d++) {
+      const cell = document.createElement('div');
+      const rand = Math.random();
+      const weekBias = w / 24;
+      let level = 0;
+      if (rand < 0.15) level = 0;
+      else if (rand < 0.3 - weekBias * 0.15) level = 1;
+      else if (rand < 0.5 - weekBias * 0.1) level = 2;
+      else if (rand < 0.75) level = 3;
+      else level = 4;
+      cell.className = `heatmap-cell ${levels[level]}`;
+      col.appendChild(cell);
+    }
+    grid.appendChild(col);
+  }
+</script>
+
+</body>
+</html>

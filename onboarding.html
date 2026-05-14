@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f4f3f0;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 40px 20px;
+    font-family: 'DM Sans', sans-serif;
+    color: #1a1a18;
+    flex-wrap: wrap;
+  }
+
+  .screen-label {
+    text-align: center; font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: #9c9a92;
+    margin-bottom: 12px;
+  }
+
+  .phone {
+    width: 375px; min-height: 812px; background: #ffffff; border-radius: 40px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.06);
+    position: relative; display: flex; flex-direction: column;
+  }
+
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 28px 0; font-size: 12px; font-weight: 600;
+  }
+
+  /* ========== Welcome screens ========== */
+  .welcome-body {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 32px 100px;
+    text-align: center;
+  }
+
+  .welcome-icon {
+    width: 80px; height: 80px; margin-bottom: 32px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .welcome-title {
+    font-size: 28px; font-weight: 600; letter-spacing: -0.5px;
+    margin-bottom: 12px; line-height: 1.2;
+  }
+
+  .welcome-desc {
+    font-size: 15px; color: #5a5950; line-height: 1.6; max-width: 280px;
+  }
+
+  .welcome-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 0 32px 48px; display: flex; flex-direction: column;
+    align-items: center; gap: 16px;
+  }
+
+  .dots {
+    display: flex; gap: 6px;
+  }
+
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #e8e7e3;
+  }
+
+  .dot.active { background: #1a1a18; width: 20px; border-radius: 3px; }
+
+  .primary-btn {
+    width: 100%; padding: 16px; background: #1a1a18; color: #fff;
+    border-radius: 14px; font-size: 16px; font-weight: 500;
+    text-align: center; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .skip-btn {
+    font-size: 14px; color: #9c9a92; cursor: pointer; padding: 8px;
+  }
+
+  /* ========== Quick start screen ========== */
+  .quickstart-body {
+    flex: 1; padding: 24px 24px 120px;
+  }
+
+  .qs-title {
+    font-size: 24px; font-weight: 600; letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .qs-desc {
+    font-size: 14px; color: #9c9a92; margin-bottom: 24px;
+    font-family: 'Newsreader', serif; font-style: italic;
+  }
+
+  .qs-section {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #b8b6ae; margin: 20px 0 10px;
+  }
+
+  .qs-preset-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+
+  .qs-preset {
+    padding: 16px; border: 0.5px solid #e8e7e3; border-radius: 14px;
+    cursor: pointer; transition: all 0.15s; position: relative;
+  }
+
+  .qs-preset:active { transform: scale(0.98); }
+
+  .qs-preset.selected {
+    border-color: #1a1a18; background: #fafaf8;
+  }
+
+  .qs-preset.selected::after {
+    content: ''; position: absolute; top: 10px; right: 10px;
+    width: 20px; height: 20px; background: #1a1a18; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 6L5 9L10 3' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: center;
+  }
+
+  .qs-preset-icon { font-size: 24px; margin-bottom: 8px; }
+
+  .qs-preset-name { font-size: 14px; font-weight: 500; }
+
+  .qs-preset-hint { font-size: 11px; color: #9c9a92; margin-top: 2px; }
+
+  .qs-or {
+    text-align: center; font-size: 12px; color: #b8b6ae; margin: 16px 0;
+  }
+
+  .qs-custom-btn {
+    width: 100%; padding: 14px; border: 1.5px dashed #e8e7e3; border-radius: 14px;
+    text-align: center; font-size: 14px; font-weight: 500; color: #9c9a92;
+    cursor: pointer; transition: all 0.15s;
+  }
+
+  .qs-custom-btn:hover { border-color: #1a1a18; color: #1a1a18; }
+
+  .qs-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 16px 32px 48px; background: #fff;
+    border-top: 0.5px solid #f0efec;
+  }
+
+  .qs-counter {
+    font-size: 12px; color: #9c9a92; text-align: center; margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== SCREEN 1: Welcome ===== -->
+<div>
+  <div class="screen-label">Screen 1 — Welcome</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#9c9a92;">●●● 🔋</span>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-icon">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="8" y="16" width="48" height="40" rx="8" stroke="#1a1a18" stroke-width="2.5"/>
+          <path d="M8 28H56" stroke="#1a1a18" stroke-width="2.5"/>
+          <path d="M22 8V20M42 8V20" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M22 38L28 44L42 32" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="welcome-title">Track anything.<br/>Your way.</div>
+      <div class="welcome-desc">
+        A flexible tracker that adapts to what you do — gym, reading, habits, or anything else.
+      </div>
+    </div>
+    <div class="welcome-bottom">
+      <div class="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div class="primary-btn">Next</div>
+      <div class="skip-btn">Skip</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: Flexible structure ===== -->
+<div>
+  <div class="screen-label">Screen 2 — Key feature</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#9c9a92;">●●● 🔋</span>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-icon">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <!-- Tree icon -->
+          <rect x="12" y="8" width="40" height="12" rx="6" stroke="#1a1a18" stroke-width="2.5"/>
+          <line x1="32" y1="20" x2="32" y2="28" stroke="#1a1a18" stroke-width="2.5"/>
+          <line x1="20" y1="28" x2="44" y2="28" stroke="#1a1a18" stroke-width="2.5"/>
+          <line x1="20" y1="28" x2="20" y2="34" stroke="#1a1a18" stroke-width="2.5"/>
+          <line x1="44" y1="28" x2="44" y2="34" stroke="#1a1a18" stroke-width="2.5"/>
+          <rect x="8" y="34" width="24" height="10" rx="5" stroke="#1a1a18" stroke-width="2.5"/>
+          <rect x="36" y="34" width="20" height="10" rx="5" stroke="#1a1a18" stroke-width="2.5"/>
+          <line x1="16" y1="44" x2="16" y2="50" stroke="#1a1a18" stroke-width="2.5"/>
+          <rect x="6" y="50" width="20" height="8" rx="4" stroke="#1a1a18" stroke-width="2"/>
+          <rect x="30" y="50" width="20" height="8" rx="4" stroke="#1a1a18" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="welcome-title">Define your own<br/>variables</div>
+      <div class="welcome-desc">
+        Track sets, reps, and weight for gym. Pages for reading. Or just a simple checkbox. You decide what matters.
+      </div>
+    </div>
+    <div class="welcome-bottom">
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <div class="primary-btn">Next</div>
+      <div class="skip-btn">Skip</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 3: Insights ===== -->
+<div>
+  <div class="screen-label">Screen 3 — AI insights</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#9c9a92;">●●● 🔋</span>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-icon">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="24" stroke="#1a1a18" stroke-width="2.5"/>
+          <path d="M20 38C20 38 24 28 32 28C40 28 44 38 44 38" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="2" fill="#1a1a18"/>
+          <circle cx="40" cy="24" r="2" fill="#1a1a18"/>
+          <path d="M32 12V8M50 20L53 17M14 20L11 17" stroke="#1a1a18" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="welcome-title">Smart insights,<br/>not noise</div>
+      <div class="welcome-desc">
+        AI spots patterns you'd miss — like which days you skip, what activities reinforce each other, and where you're progressing.
+      </div>
+    </div>
+    <div class="welcome-bottom">
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot active"></div>
+      </div>
+      <div class="primary-btn">Get started</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 4: Quick start ===== -->
+<div>
+  <div class="screen-label">Screen 4 — First activity</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#9c9a92;">●●● 🔋</span>
+    </div>
+    <div class="quickstart-body">
+      <div class="qs-title">What do you track?</div>
+      <div class="qs-desc">Pick a few to start with — you can always add more later</div>
+
+      <div class="qs-section">Popular</div>
+      <div class="qs-preset-grid">
+        <div class="qs-preset selected">
+          <div class="qs-preset-icon">🏋️</div>
+          <div class="qs-preset-name">Gym</div>
+          <div class="qs-preset-hint">Exercises, sets, reps</div>
+        </div>
+        <div class="qs-preset selected">
+          <div class="qs-preset-icon">📖</div>
+          <div class="qs-preset-name">Reading</div>
+          <div class="qs-preset-hint">Book, pages</div>
+        </div>
+        <div class="qs-preset">
+          <div class="qs-preset-icon">🏃</div>
+          <div class="qs-preset-name">Running</div>
+          <div class="qs-preset-hint">Distance, time</div>
+        </div>
+        <div class="qs-preset">
+          <div class="qs-preset-icon">🧘</div>
+          <div class="qs-preset-name">Meditation</div>
+          <div class="qs-preset-hint">Duration, technique</div>
+        </div>
+        <div class="qs-preset selected">
+          <div class="qs-preset-icon">💧</div>
+          <div class="qs-preset-name">Drink Water</div>
+          <div class="qs-preset-hint">Glasses per day</div>
+        </div>
+        <div class="qs-preset">
+          <div class="qs-preset-icon">📝</div>
+          <div class="qs-preset-name">Study</div>
+          <div class="qs-preset-hint">Subject, duration</div>
+        </div>
+      </div>
+
+      <div class="qs-or">or</div>
+
+      <div class="qs-custom-btn">
+        + Create custom activity
+      </div>
+    </div>
+
+    <div class="qs-bottom">
+      <div class="qs-counter">3 selected</div>
+      <div class="primary-btn">Continue</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

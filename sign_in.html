@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f4f3f0;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 40px 20px;
+    font-family: 'DM Sans', sans-serif;
+    color: #1a1a18;
+    flex-wrap: wrap;
+  }
+
+  .screen-label {
+    text-align: center; font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: #9c9a92;
+    margin-bottom: 12px;
+  }
+
+  .phone {
+    width: 375px; min-height: 812px; background: #ffffff; border-radius: 40px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.06);
+    position: relative; display: flex; flex-direction: column;
+  }
+
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 28px 0; font-size: 12px; font-weight: 600;
+  }
+
+  /* ===== SIGN IN MAIN ===== */
+  .signin-body {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 60px 32px 48px;
+  }
+
+  .logo-area {
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 48px;
+  }
+
+  .logo-icon {
+    width: 64px; height: 64px; background: #1a1a18; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .app-name {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .app-tagline {
+    font-size: 14px; color: #9c9a92;
+    font-family: 'Newsreader', serif; font-style: italic;
+  }
+
+  .signin-section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #b8b6ae; margin-bottom: 16px;
+    text-align: center;
+  }
+
+  /* Google button */
+  .google-btn {
+    width: 100%; padding: 15px 20px; border: 0.5px solid #e8e7e3;
+    border-radius: 14px; display: flex; align-items: center;
+    justify-content: center; gap: 12px; cursor: pointer;
+    transition: all 0.15s; background: #fff; margin-bottom: 12px;
+  }
+
+  .google-btn:active {
+    background: #fafaf8; transform: scale(0.99);
+  }
+
+  .google-btn-text {
+    font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 24px 0;
+  }
+
+  .divider-line {
+    flex: 1; height: 0.5px; background: #e8e7e3;
+  }
+
+  .divider-text {
+    font-size: 12px; color: #b8b6ae; font-weight: 500;
+  }
+
+  /* Phone input */
+  .phone-input-group {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+
+  .country-code {
+    width: 80px; padding: 14px 12px; border: 0.5px solid #e8e7e3;
+    border-radius: 12px; font-size: 15px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; cursor: pointer; background: #fafaf8;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .phone-input {
+    flex: 1; padding: 14px 16px; border: 0.5px solid #e8e7e3;
+    border-radius: 12px; font-size: 15px; font-family: 'DM Sans', sans-serif;
+    color: #1a1a18; outline: none; background: #fff;
+  }
+
+  .phone-input:focus { border-color: #1a1a18; }
+  .phone-input::placeholder { color: #d4d3ce; }
+
+  .send-otp-btn {
+    width: 100%; padding: 16px; background: #1a1a18; color: #fff;
+    border-radius: 14px; font-size: 15px; font-weight: 500;
+    text-align: center; cursor: pointer; border: none;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+
+  .send-otp-btn:active { transform: scale(0.99); opacity: 0.9; }
+
+  .send-otp-btn.disabled {
+    background: #e8e7e3; color: #b8b6ae; cursor: default;
+  }
+
+  /* Terms */
+  .terms {
+    margin-top: auto; text-align: center;
+    font-size: 12px; color: #b8b6ae; line-height: 1.6;
+    padding-top: 24px;
+  }
+
+  .terms a {
+    color: #5a5950; text-decoration: underline;
+    text-decoration-color: #d4d3ce;
+  }
+
+  /* ===== OTP SCREEN ===== */
+  .otp-body {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 24px 32px 48px;
+  }
+
+  .otp-back {
+    width: 32px; height: 32px; border-radius: 10px; background: #f8f7f5;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; margin-bottom: 32px;
+  }
+
+  .otp-title {
+    font-size: 24px; font-weight: 600; letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .otp-desc {
+    font-size: 14px; color: #9c9a92; margin-bottom: 32px; line-height: 1.5;
+  }
+
+  .otp-phone-highlight { color: #1a1a18; font-weight: 500; }
+
+  .otp-input-group {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 32px;
+  }
+
+  .otp-digit {
+    width: 52px; height: 60px; border: 0.5px solid #e8e7e3; border-radius: 14px;
+    font-size: 24px; font-weight: 600; text-align: center;
+    font-family: 'DM Sans', sans-serif; outline: none; color: #1a1a18;
+    caret-color: #1a1a18;
+  }
+
+  .otp-digit:focus { border-color: #1a1a18; }
+  .otp-digit.filled { background: #fafaf8; border-color: #1a1a18; }
+
+  .resend-row {
+    text-align: center; margin-bottom: 32px;
+  }
+
+  .resend-text {
+    font-size: 13px; color: #9c9a92;
+  }
+
+  .resend-link {
+    font-size: 13px; color: #1a1a18; font-weight: 500;
+    cursor: pointer; text-decoration: underline;
+    text-decoration-color: #d4d3ce;
+  }
+
+  .resend-timer {
+    font-size: 13px; color: #b8b6ae; font-weight: 500;
+  }
+
+  .verify-btn {
+    width: 100%; padding: 16px; background: #1a1a18; color: #fff;
+    border-radius: 14px; font-size: 15px; font-weight: 500;
+    text-align: center; cursor: pointer; border: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ===== DARK SIGN IN ===== */
+  .phone.dark {
+    background: #141413;
+  }
+
+  .phone.dark .status-bar { color: #e8e7e3; }
+
+  .phone.dark .logo-icon {
+    background: #e8e7e3;
+  }
+
+  .phone.dark .app-name { color: #e8e7e3; }
+  .phone.dark .app-tagline { color: #5a5950; }
+  .phone.dark .signin-section-label { color: #5a5950; }
+
+  .phone.dark .google-btn {
+    border-color: #2a2a26; background: #1e1e1c;
+  }
+  .phone.dark .google-btn:active { background: #2a2a26; }
+  .phone.dark .google-btn-text { color: #e8e7e3; }
+
+  .phone.dark .divider-line { background: #2a2a26; }
+  .phone.dark .divider-text { color: #5a5950; }
+
+  .phone.dark .country-code {
+    border-color: #2a2a26; background: #1e1e1c; color: #e8e7e3;
+  }
+
+  .phone.dark .phone-input {
+    border-color: #2a2a26; background: #1e1e1c; color: #e8e7e3;
+  }
+  .phone.dark .phone-input:focus { border-color: #e8e7e3; }
+  .phone.dark .phone-input::placeholder { color: #3a3a36; }
+
+  .phone.dark .send-otp-btn {
+    background: #e8e7e3; color: #141413;
+  }
+
+  .phone.dark .send-otp-btn.disabled {
+    background: #2a2a26; color: #5a5950;
+  }
+
+  .phone.dark .terms { color: #5a5950; }
+  .phone.dark .terms a { color: #9c9a92; text-decoration-color: #3a3a36; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .logo-area { animation: fadeIn 0.4s ease both; }
+  .google-btn { animation: fadeIn 0.3s ease 0.1s both; }
+  .divider { animation: fadeIn 0.3s ease 0.15s both; }
+  .phone-input-group { animation: fadeIn 0.3s ease 0.2s both; }
+  .send-otp-btn { animation: fadeIn 0.3s ease 0.25s both; }
+</style>
+</head>
+<body>
+
+<!-- ===== SIGN IN — LIGHT ===== -->
+<div>
+  <div class="screen-label">Sign in — light</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#9c9a92;">●●● 🔋</span>
+    </div>
+
+    <div class="signin-body">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M6 8L14 3L22 8V20L14 25L6 20V8Z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M10 14L13 17L18 11" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="app-name">Activity Tracker</div>
+        <div class="app-tagline">Track anything. Your way.</div>
+      </div>
+
+      <!-- Google sign in -->
+      <div class="google-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M19.6 10.23c0-.68-.06-1.36-.17-2H10v3.77h5.4a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.9-1.74 2.96-4.3 2.96-7.3z" fill="#4285F4"/>
+          <path d="M10 20c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51c-.9.6-2.04.95-3.39.95-2.6 0-4.8-1.76-5.6-4.12H1.07v2.6A10 10 0 0 0 10 20z" fill="#34A853"/>
+          <path d="M4.4 11.9a6.01 6.01 0 0 1 0-3.8V5.5H1.07a10 10 0 0 0 0 8.98L4.4 11.9z" fill="#FBBC05"/>
+          <path d="M10 3.98c1.47 0 2.79.5 3.82 1.5l2.86-2.87A10 10 0 0 0 1.07 5.5L4.4 8.1c.79-2.36 2.99-4.12 5.6-4.12z" fill="#EA4335"/>
+        </svg>
+        <span class="google-btn-text">Continue with Google</span>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">or</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- Phone input -->
+      <div class="signin-section-label">Sign in with phone</div>
+      <div class="phone-input-group">
+        <div class="country-code">
+          🇮🇳
+          <span>+91</span>
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="#9c9a92" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <input class="phone-input" type="tel" placeholder="Phone number" value="98765 43210" />
+      </div>
+
+      <button class="send-otp-btn">Send OTP</button>
+
+      <!-- Terms -->
+      <div class="terms">
+        By continuing, you agree to our<br/>
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OTP VERIFICATION ===== -->
+<div>
+  <div class="screen-label">OTP verification</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#9c9a92;">●●● 🔋</span>
+    </div>
+
+    <div class="otp-body">
+      <div class="otp-back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="#1a1a18" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="otp-title">Verify your number</div>
+      <div class="otp-desc">
+        We sent a 6-digit code to<br/>
+        <span class="otp-phone-highlight">+91 98765 43210</span>
+      </div>
+
+      <div class="otp-input-group">
+        <input class="otp-digit filled" type="text" maxlength="1" value="4" />
+        <input class="otp-digit filled" type="text" maxlength="1" value="8" />
+        <input class="otp-digit filled" type="text" maxlength="1" value="2" />
+        <input class="otp-digit" type="text" maxlength="1" value="" />
+        <input class="otp-digit" type="text" maxlength="1" value="" />
+        <input class="otp-digit" type="text" maxlength="1" value="" />
+      </div>
+
+      <div class="resend-row">
+        <span class="resend-text">Didn't get it? </span>
+        <span class="resend-timer">Resend in 0:24</span>
+      </div>
+
+      <button class="verify-btn">Verify</button>
+
+      <div class="terms" style="margin-top:auto; padding-top:0;">
+        <br/>Wrong number? <a href="#" style="color:#1a1a18; font-weight:500;">Change</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SIGN IN — DARK ===== -->
+<div>
+  <div class="screen-label">Sign in — dark</div>
+  <div class="phone dark">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:11px; color:#5a5950;">●●● 🔋</span>
+    </div>
+
+    <div class="signin-body">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M6 8L14 3L22 8V20L14 25L6 20V8Z" stroke="#141413" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M10 14L13 17L18 11" stroke="#141413" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="app-name">Activity Tracker</div>
+        <div class="app-tagline">Track anything. Your way.</div>
+      </div>
+
+      <div class="google-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M19.6 10.23c0-.68-.06-1.36-.17-2H10v3.77h5.4a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.9-1.74 2.96-4.3 2.96-7.3z" fill="#4285F4"/>
+          <path d="M10 20c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51c-.9.6-2.04.95-3.39.95-2.6 0-4.8-1.76-5.6-4.12H1.07v2.6A10 10 0 0 0 10 20z" fill="#34A853"/>
+          <path d="M4.4 11.9a6.01 6.01 0 0 1 0-3.8V5.5H1.07a10 10 0 0 0 0 8.98L4.4 11.9z" fill="#FBBC05"/>
+          <path d="M10 3.98c1.47 0 2.79.5 3.82 1.5l2.86-2.87A10 10 0 0 0 1.07 5.5L4.4 8.1c.79-2.36 2.99-4.12 5.6-4.12z" fill="#EA4335"/>
+        </svg>
+        <span class="google-btn-text">Continue with Google</span>
+      </div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">or</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="signin-section-label">Sign in with phone</div>
+      <div class="phone-input-group">
+        <div class="country-code">
+          🇮🇳
+          <span>+91</span>
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="#5a5950" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <input class="phone-input" type="tel" placeholder="Phone number" />
+      </div>
+
+      <button class="send-otp-btn disabled">Send OTP</button>
+
+      <div class="terms">
+        By continuing, you agree to our<br/>
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

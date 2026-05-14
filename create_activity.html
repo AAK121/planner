@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Activity Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f4f3f0;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    font-family: 'DM Sans', sans-serif;
+    color: #1a1a18;
+  }
+
+  .phone {
+    width: 375px;
+    min-height: 812px;
+    background: #ffffff;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.06);
+    position: relative;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px 0;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 24px 16px;
+    border-bottom: 0.5px solid #f0efec;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .back-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #f8f7f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .save-btn {
+    padding: 8px 20px;
+    background: #1a1a18;
+    color: #fff;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .form-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #b8b6ae;
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  .section-label:first-child { margin-top: 0; }
+
+  .input-field {
+    width: 100%;
+    padding: 14px 16px;
+    border: 0.5px solid #e8e7e3;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    color: #1a1a18;
+    outline: none;
+    transition: border-color 0.15s;
+    background: #fff;
+  }
+
+  .input-field:focus {
+    border-color: #1a1a18;
+  }
+
+  .input-field::placeholder {
+    color: #d4d3ce;
+  }
+
+  /* Type selector pills */
+  .type-pills {
+    display: flex;
+    gap: 8px;
+  }
+
+  .type-pill {
+    flex: 1;
+    padding: 12px 8px;
+    border: 0.5px solid #e8e7e3;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .type-pill.active {
+    background: #1a1a18;
+    border-color: #1a1a18;
+    color: #fff;
+  }
+
+  .type-pill-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .type-pill-desc {
+    font-size: 10px;
+    color: #9c9a92;
+    margin-top: 2px;
+  }
+
+  .type-pill.active .type-pill-desc { color: rgba(255,255,255,0.5); }
+
+  /* Schedule section */
+  .schedule-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .day-chip {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 0.5px solid #e8e7e3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9c9a92;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .day-chip.active {
+    background: #1a1a18;
+    border-color: #1a1a18;
+    color: #fff;
+  }
+
+  .time-picker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 0.5px solid #e8e7e3;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .time-picker-label {
+    font-size: 14px;
+    color: #9c9a92;
+    flex: 1;
+  }
+
+  .time-picker-value {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* Card-based tree builder */
+  .tree-section {
+    margin-top: 8px;
+  }
+
+  .node-card {
+    background: #fafaf8;
+    border: 0.5px solid #f0efec;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .node-card:active {
+    transform: scale(0.99);
+  }
+
+  .node-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .node-card-name {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .node-card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .node-card-hint {
+    font-size: 11px;
+    color: #b8b6ae;
+    padding: 2px 8px;
+    background: #f0efec;
+    border-radius: 8px;
+  }
+
+  /* Nested children */
+  .node-children {
+    margin-left: 12px;
+    margin-top: 6px;
+    padding-left: 12px;
+    border-left: 1.5px solid #f0efec;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .child-card {
+    background: #fff;
+    border: 0.5px solid #f0efec;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .child-card:active { background: #fafaf8; }
+
+  .child-name {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .child-meta {
+    font-size: 11px;
+    color: #b8b6ae;
+    margin-top: 1px;
+  }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border: 1.5px dashed #e8e7e3;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #9c9a92;
+    cursor: pointer;
+  }
+
+  .add-btn:hover {
+    border-color: #1a1a18;
+    color: #1a1a18;
+  }
+
+  /* Goal field */
+  .goal-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .goal-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 0.5px solid #e8e7e3;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+
+  .goal-input:focus { border-color: #1a1a18; }
+  .goal-input::placeholder { color: #d4d3ce; }
+
+  .goal-unit {
+    padding: 12px 14px;
+    border: 0.5px solid #e8e7e3;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #5a5950;
+    font-weight: 500;
+    background: #fafaf8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Preset bar */
+  .preset-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+  }
+
+  .preset-chip {
+    padding: 8px 14px;
+    border: 0.5px solid #e8e7e3;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5a5950;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-chip:hover {
+    background: #f8f7f5;
+  }
+
+  .preset-chip:active {
+    background: #1a1a18;
+    color: #fff;
+    border-color: #1a1a18;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .form-body > * { animation: fadeIn 0.25s ease both; }
+  .form-body > *:nth-child(2) { animation-delay: 0.05s; }
+  .form-body > *:nth-child(3) { animation-delay: 0.1s; }
+  .form-body > *:nth-child(4) { animation-delay: 0.15s; }
+  .form-body > *:nth-child(5) { animation-delay: 0.2s; }
+  .form-body > *:nth-child(6) { animation-delay: 0.25s; }
+  .form-body > *:nth-child(7) { animation-delay: 0.3s; }
+  .form-body > *:nth-child(8) { animation-delay: 0.35s; }
+  .form-body > *:nth-child(9) { animation-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <span>9:41</span>
+    <span style="font-size:11px; color:#9c9a92;">●●● 🔋</span>
+  </div>
+
+  <div class="header">
+    <div class="header-left">
+      <div class="back-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="#1a1a18" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <h2>New activity</h2>
+    </div>
+    <div class="save-btn">Save</div>
+  </div>
+
+  <div class="form-body">
+
+    <!-- Name -->
+    <div class="section-label">Name</div>
+    <input class="input-field" type="text" placeholder="e.g., Gym, Read, Call Mom" value="Gym" />
+
+    <!-- Type -->
+    <div class="section-label">Type</div>
+    <div class="type-pills">
+      <div class="type-pill active">
+        <div class="type-pill-name">Recurring</div>
+        <div class="type-pill-desc">Has a schedule</div>
+      </div>
+      <div class="type-pill">
+        <div class="type-pill-name">Occasional</div>
+        <div class="type-pill-desc">No fixed days</div>
+      </div>
+      <div class="type-pill">
+        <div class="type-pill-name">One-off</div>
+        <div class="type-pill-desc">Single event</div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="section-label">Schedule</div>
+    <div class="schedule-row">
+      <div class="day-chip active">M</div>
+      <div class="day-chip">T</div>
+      <div class="day-chip active">W</div>
+      <div class="day-chip">T</div>
+      <div class="day-chip active">F</div>
+      <div class="day-chip">S</div>
+      <div class="day-chip">S</div>
+    </div>
+    <div class="time-picker">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="#9c9a92" stroke-width="1.2"/>
+        <path d="M8 4V8L10.5 9.5" stroke="#9c9a92" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <div class="time-picker-label">Reminder time</div>
+      <div class="time-picker-value">8:00 AM</div>
+    </div>
+
+    <!-- Variables (tree builder) -->
+    <div class="section-label">Variables</div>
+
+    <!-- Preset chips -->
+    <div class="preset-bar">
+      <div class="preset-chip">Workout</div>
+      <div class="preset-chip">Cardio</div>
+      <div class="preset-chip">Reading</div>
+      <div class="preset-chip">Study</div>
+      <div class="preset-chip">Meditation</div>
+      <div class="preset-chip">Habit</div>
+      <div class="preset-chip">Counter</div>
+    </div>
+
+    <div class="tree-section">
+      <!-- Upper Body card -->
+      <div class="node-card">
+        <div class="node-card-header">
+          <div class="node-card-name">Upper Body</div>
+          <div class="node-card-right">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="#d4d3ce" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+        <div class="node-children">
+          <div class="child-card">
+            <div>
+              <div class="child-name">Exercises</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="#d4d3ce" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+
+          <!-- Deeper nesting preview -->
+          <div style="margin-left:16px; padding-left:12px; border-left:1.5px solid #f0efec; display:flex; flex-direction:column; gap:5px;">
+            <div class="child-card">
+              <div>
+                <div class="child-name">Exercise Name</div>
+              </div>
+            </div>
+            <div class="child-card">
+              <div>
+                <div class="child-name">Sets</div>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="#d4d3ce" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div style="margin-left:16px; padding-left:12px; border-left:1.5px solid #f0efec; display:flex; flex-direction:column; gap:5px;">
+              <div class="child-card">
+                <div><div class="child-name">Weight</div></div>
+              </div>
+              <div class="child-card">
+                <div><div class="child-name">Reps</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="add-btn">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Add variable
+          </div>
+        </div>
+      </div>
+
+      <!-- Add top-level -->
+      <div class="add-btn" style="margin-top:6px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Add variable
+      </div>
+    </div>
+
+    <!-- Goal -->
+    <div class="section-label">Goal (optional)</div>
+    <div class="goal-row">
+      <input class="goal-input" type="text" placeholder="e.g., 5" value="5" />
+      <div class="goal-unit">
+        times / week
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+
+    <div style="height: 40px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
