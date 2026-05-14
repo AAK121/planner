@@ -61,5 +61,5 @@ class SettingsViewModel @Inject constructor(
     fun setLlmProvider(v: String) = launch { prefs.setLlmProvider(v) }
     fun setLlmApiKey(v: String) = launch { prefs.setLlmApiKey(v) }
 
-    private fun launch(block: suspend () -> Unit) = viewModelScope.launch { block() }
+    private fun launch(block: suspend () -> Unit) { viewModelScope.launch { block() } }
 }

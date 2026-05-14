@@ -23,7 +23,7 @@ fun NumberChart(
     if (series.dataPoints.isEmpty()) return
 
     val entries = remember(series.dataPoints) {
-        series.dataPoints.mapIndexed { i, (_, v) -> FloatEntry(i.toFloat(), v) }
+        series.dataPoints.mapIndexed { i, (_, v) -> FloatEntry(i.toFloat(), v.toFloat()) }
     }
     val model = remember(entries) { entryModelOf(entries) }
 

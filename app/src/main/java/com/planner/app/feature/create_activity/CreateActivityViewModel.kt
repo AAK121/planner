@@ -65,22 +65,22 @@ class CreateActivityViewModel @Inject constructor(
         }
     }
 
-    fun setName(name: String)                = _state.value = _state.value.copy(name = name)
-    fun setType(type: ActivityType)          = _state.value = _state.value.copy(type = type)
-    fun setColor(color: String)              = _state.value = _state.value.copy(color = color)
-    fun setEmoji(emoji: String)              = _state.value = _state.value.copy(emoji = emoji)
+    fun setName(name: String)                { _state.value = _state.value.copy(name = name) }
+    fun setType(type: ActivityType)          { _state.value = _state.value.copy(type = type) }
+    fun setColor(color: String)              { _state.value = _state.value.copy(color = color) }
+    fun setEmoji(emoji: String)              { _state.value = _state.value.copy(emoji = emoji) }
     fun toggleDay(day: Int) {
         val days = _state.value.selectedDays.toMutableList()
         if (days.contains(day)) days.remove(day) else days.add(day)
         _state.value = _state.value.copy(selectedDays = days.sorted())
     }
-    fun addTime(time: String)                = _state.value = _state.value.copy(times = _state.value.times + time)
-    fun removeTime(time: String)             = _state.value = _state.value.copy(times = _state.value.times - time)
-    fun setHasReminder(v: Boolean)           = _state.value = _state.value.copy(hasReminder = v)
-    fun setVariableTree(tree: List<VariableNode>) = _state.value = _state.value.copy(variableTree = tree)
-    fun setGoal(goal: Goal?)                 = _state.value = _state.value.copy(goal = goal)
-    fun nextStep()                           = _state.value = _state.value.copy(currentStep = _state.value.currentStep + 1)
-    fun prevStep()                           = _state.value = _state.value.copy(currentStep = (_state.value.currentStep - 1).coerceAtLeast(0))
+    fun addTime(time: String)                { _state.value = _state.value.copy(times = _state.value.times + time) }
+    fun removeTime(time: String)             { _state.value = _state.value.copy(times = _state.value.times - time) }
+    fun setHasReminder(v: Boolean)           { _state.value = _state.value.copy(hasReminder = v) }
+    fun setVariableTree(tree: List<VariableNode>) { _state.value = _state.value.copy(variableTree = tree) }
+    fun setGoal(goal: Goal?)                 { _state.value = _state.value.copy(goal = goal) }
+    fun nextStep()                           { _state.value = _state.value.copy(currentStep = _state.value.currentStep + 1) }
+    fun prevStep()                           { _state.value = _state.value.copy(currentStep = (_state.value.currentStep - 1).coerceAtLeast(0)) }
 
     fun save() {
         val s = _state.value
