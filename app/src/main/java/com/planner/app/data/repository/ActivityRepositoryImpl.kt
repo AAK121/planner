@@ -29,6 +29,9 @@ class ActivityRepositoryImpl @Inject constructor(
             all.filter { it.schedule.daysOfWeek.contains(today.dayOfWeek.value) }
         }
 
+    override suspend fun getAll(): List<Activity> =
+        dao.getAll().map { it.toDomain() }
+
     override suspend fun getById(id: String): Activity? =
         dao.getById(id)?.toDomain()
 

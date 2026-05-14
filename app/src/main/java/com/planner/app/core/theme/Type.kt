@@ -2,21 +2,36 @@ package com.planner.app.core.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.googlefonts.Font
+import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 import com.planner.app.R
 
+private val provider = GoogleFont.Provider(
+    providerAuthority = "com.google.android.gms.fonts",
+    providerPackage = "com.google.android.gms",
+    certificates = R.array.com_google_android_gms_fonts_certs,
+)
+
+private val dmSansFont = GoogleFont("DM Sans")
+private val newsreaderFont = GoogleFont("Newsreader")
+
 val DmSans = FontFamily(
-    Font(R.font.dm_sans_regular, FontWeight.Normal),
-    Font(R.font.dm_sans_medium, FontWeight.Medium),
-    Font(R.font.dm_sans_semibold, FontWeight.SemiBold),
+    Font(googleFont = dmSansFont, fontProvider = provider, weight = FontWeight.Normal),
+    Font(googleFont = dmSansFont, fontProvider = provider, weight = FontWeight.Medium),
+    Font(googleFont = dmSansFont, fontProvider = provider, weight = FontWeight.SemiBold),
 )
 
 val Newsreader = FontFamily(
-    Font(R.font.newsreader_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(
+        googleFont = newsreaderFont,
+        fontProvider = provider,
+        weight = FontWeight.Normal,
+        style = FontStyle.Italic,
+    ),
 )
 
 val PlannerTypography = Typography(

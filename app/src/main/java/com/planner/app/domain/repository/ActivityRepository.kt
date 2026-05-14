@@ -7,6 +7,7 @@ import java.time.LocalDate
 interface ActivityRepository {
     fun observeAll(): Flow<List<Activity>>
     fun observeForToday(today: LocalDate): Flow<List<Activity>>
+    suspend fun getAll(): List<Activity>
     suspend fun getById(id: String): Activity?
     suspend fun create(activity: Activity)
     suspend fun update(activity: Activity)

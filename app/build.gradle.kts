@@ -108,6 +108,9 @@ dependencies {
     // MediaPipe
     implementation(libs.mediapipe.tasks.genai)
 
+    // Google Fonts (downloadable fonts for Compose)
+    implementation(libs.androidx.compose.ui.text.google.fonts)
+
     // Security
     implementation(libs.security.crypto)
 

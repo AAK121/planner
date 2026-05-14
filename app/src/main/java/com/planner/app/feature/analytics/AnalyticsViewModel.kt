@@ -31,7 +31,7 @@ class AnalyticsViewModel @Inject constructor(
     private val activityId: String = checkNotNull(savedStateHandle["activityId"])
 
     val uiState: StateFlow<AnalyticsUiState> = getLogsForActivity(activityId)
-        .combine(flowOf(activityRepository.getById(activityId))) { logs, activity ->
+        .combine(flow { emit(activityRepository.getById(activityId)) }) { logs, activity ->
             if (activity == null) return@combine AnalyticsUiState(isLoading = false)
             val today = LocalDate.now()
             val streak = computeStreak(logs, today)
