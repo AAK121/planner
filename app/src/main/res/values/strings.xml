@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Planner</string>
+    <string name="channel_reminders">Reminders</string>
+    <string name="channel_streaks">Streaks</string>
+    <string name="channel_insights">Weekly Insights</string>
+    <string name="channel_celebrations">Celebrations</string>
+    <string name="channel_suggestions">Suggestions</string>
+    <string name="action_done">Done</string>
+    <string name="action_skip">Skip</string>
+</resources>

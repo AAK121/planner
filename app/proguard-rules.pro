@@ -1,0 +1,5 @@
+-keep class com.planner.app.data.** { *; }
+-keep class com.planner.app.domain.model.** { *; }
+-keepattributes *Annotation*
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**
