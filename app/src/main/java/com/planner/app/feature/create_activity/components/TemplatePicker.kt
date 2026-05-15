@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.planner.app.core.theme.ShapeCard
 import com.planner.app.domain.model.ActivityType
 import com.planner.app.domain.model.VariableNode
-import com.planner.app.domain.model.ValueType
 import com.planner.app.core.utils.newId
 
 data class ActivityTemplate(
@@ -29,48 +28,15 @@ val activityTemplates = listOf(
         emoji = "🏋️", name = "Workout", color = "#5B9E9E",
         type = ActivityType.RECURRING, defaultDays = listOf(1, 3, 5),
         tree = listOf(
-            VariableNode.ListNode(
-                id = newId(), label = "Exercises",
-                itemTemplate = listOf(
-                    VariableNode.ValueNode(id = newId(), label = "Exercise name", valueType = ValueType.TEXT),
-                    VariableNode.ListNode(id = newId(), label = "Sets", itemTemplate = listOf(
-                        VariableNode.ValueNode(id = newId(), label = "Weight (kg)", valueType = ValueType.NUMBER),
-                        VariableNode.ValueNode(id = newId(), label = "Reps", valueType = ValueType.NUMBER),
-                    ))
-                )
-            )
-        ),
-    ),
-    ActivityTemplate(
-        emoji = "🏃", name = "Cardio", color = "#C9A24E",
-        type = ActivityType.RECURRING, defaultDays = listOf(2, 4, 6),
-        tree = listOf(
-            VariableNode.ValueNode(id = newId(), label = "Distance (km)", valueType = ValueType.NUMBER),
-            VariableNode.ValueNode(id = newId(), label = "Pace (min/km)", valueType = ValueType.DURATION),
+            VariableNode.GroupNode(id = newId(), label = "Upper Body"),
+            VariableNode.GroupNode(id = newId(), label = "Lower Body"),
+            VariableNode.GroupNode(id = newId(), label = "Cardio"),
         ),
     ),
     ActivityTemplate(
         emoji = "📖", name = "Reading", color = "#D4816B",
         type = ActivityType.RECURRING, defaultDays = listOf(1, 2, 3, 4, 5, 6, 7),
-        tree = listOf(
-            VariableNode.ValueNode(id = newId(), label = "Book title", valueType = ValueType.TEXT),
-            VariableNode.ValueNode(id = newId(), label = "Pages read", valueType = ValueType.NUMBER),
-            VariableNode.ValueNode(id = newId(), label = "Takeaway", valueType = ValueType.TEXT),
-        ),
-    ),
-    ActivityTemplate(
-        emoji = "🧘", name = "Meditation", color = "#7A9E7A",
-        type = ActivityType.RECURRING, defaultDays = listOf(1, 2, 3, 4, 5, 6, 7),
-        tree = listOf(
-            VariableNode.ValueNode(id = newId(), label = "Technique", valueType = ValueType.TEXT),
-        ),
-    ),
-    ActivityTemplate(
-        emoji = "📝", name = "Journaling", color = "#D4816B",
-        type = ActivityType.RECURRING, defaultDays = listOf(1, 2, 3, 4, 5, 6, 7),
-        tree = listOf(
-            VariableNode.ValueNode(id = newId(), label = "Entry", valueType = ValueType.TEXT),
-        ),
+        tree = emptyList(),
     ),
 )
 

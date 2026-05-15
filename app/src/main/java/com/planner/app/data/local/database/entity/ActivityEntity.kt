@@ -1,5 +1,6 @@
 package com.planner.app.data.local.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,4 +16,6 @@ data class ActivityEntity(
     val goalJson: String,       // serialized Goal (nullable → "null")
     val createdAt: Long,
     val isArchived: Boolean = false,
+    @ColumnInfo(defaultValue = "1") val trackAnalytics: Int = 1,
+    @ColumnInfo(defaultValue = "NULL") val className: String? = null,
 )

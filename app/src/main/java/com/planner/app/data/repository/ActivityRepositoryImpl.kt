@@ -8,7 +8,10 @@ import com.planner.app.domain.model.Goal
 import com.planner.app.domain.model.Schedule
 import com.planner.app.domain.model.VariableNode
 import com.planner.app.domain.repository.ActivityRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -22,12 +25,16 @@ class ActivityRepositoryImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     override fun observeAll(): Flow<List<Activity>> =
-        dao.observeAll().map { entities -> entities.map { it.toDomain() } }
+        dao.observeAll()
+            .map { entities -> entities.map { it.toDomain() } }
+            .flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
 
     override fun observeForToday(today: LocalDate): Flow<List<Activity>> =
-        observeAll().map { all ->
-            all.filter { it.schedule.daysOfWeek.contains(today.dayOfWeek.value) }
-        }
+        observeAll()
+            .map { all -> all.filter { it.schedule.daysOfWeek.contains(today.dayOfWeek.value) } }
+            .flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
 
     override suspend fun getAll(): List<Activity> =
         dao.getAll().map { it.toDomain() }
@@ -48,29 +55,35 @@ class ActivityRepositoryImpl @Inject constructor(
     override suspend fun archive(id: String) = dao.archive(id)
 
     private fun ActivityEntity.toDomain(): Activity = Activity(
-        id         = id,
-        name       = name,
-        type       = ActivityType.valueOf(type),
-        color      = color,
-        emoji      = emoji,
-        schedule   = json.decodeFromString(scheduleJson),
-        variableTree = if (treeJson == "[]") emptyList()
-                       else json.decodeFromString<List<VariableNode>>(treeJson),
-        goal       = if (goalJson == "null") null else json.decodeFromString<Goal>(goalJson),
-        createdAt  = createdAt,
-        isArchived = isArchived,
+        id             = id,
+        name           = name,
+        type           = ActivityType.valueOf(type),
+        color          = color,
+        emoji          = emoji,
+        schedule       = json.decodeFromString(scheduleJson),
+        variableTree   = try {
+                             if (treeJson == "[]") emptyList()
+                             else json.decodeFromString(treeJson)
+                         } catch (_: Exception) { emptyList() },
+        goal           = if (goalJson == "null") null else json.decodeFromString<Goal>(goalJson),
+        createdAt      = createdAt,
+        isArchived     = isArchived,
+        trackAnalytics = trackAnalytics != 0,
+        className      = className?.takeIf { it.isNotBlank() },
     )
 
     private fun Activity.toEntity(): ActivityEntity = ActivityEntity(
-        id           = id,
-        name         = name,
-        type         = type.name,
-        color        = color,
-        emoji        = emoji,
-        scheduleJson = json.encodeToString(schedule),
-        treeJson     = json.encodeToString(variableTree),
-        goalJson     = if (goal == null) "null" else json.encodeToString(goal),
-        createdAt    = createdAt,
-        isArchived   = isArchived,
+        id             = id,
+        name           = name,
+        type           = type.name,
+        color          = color,
+        emoji          = emoji,
+        scheduleJson   = json.encodeToString(schedule),
+        treeJson       = json.encodeToString(variableTree),
+        goalJson       = if (goal == null) "null" else json.encodeToString(goal),
+        createdAt      = createdAt,
+        isArchived     = isArchived,
+        trackAnalytics = if (trackAnalytics) 1 else 0,
+        className      = className?.takeIf { it.isNotBlank() },
     )
 }

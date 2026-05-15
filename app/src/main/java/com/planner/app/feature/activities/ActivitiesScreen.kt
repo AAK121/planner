@@ -6,45 +6,64 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.planner.app.core.components.PlannerTopBar
 import com.planner.app.domain.model.Activity
 
 @Composable
 fun ActivitiesContent(
     innerPadding: PaddingValues,
     onEditActivity: (String) -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: ActivitiesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     var activityToDelete by remember { mutableStateOf<Activity?>(null) }
 
-    LazyColumn(
-        contentPadding = innerPadding,
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(0.dp),
-    ) {
-        if (state.activities.isEmpty() && !state.isLoading) {
-            item { EmptyActivities() }
-        } else {
-            items(state.activities, key = { it.id }) { activity ->
-                ActivityListItem(
-                    activity = activity,
-                    onEdit = { onEditActivity(activity.id) },
-                    onDelete = { activityToDelete = activity },
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 28.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                )
+    Column(modifier = Modifier.fillMaxSize()) {
+        PlannerTopBar(
+            title = "Activities",
+            windowInsets = WindowInsets(0),
+            actions = {
+                IconButton(onClick = onNavigateToSettings) {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+            },
+        )
+
+        LazyColumn(
+            contentPadding = innerPadding,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            if (state.activities.isEmpty() && !state.isLoading) {
+                item { EmptyActivities() }
+            } else {
+                items(state.activities, key = { it.id }) { activity ->
+                    ActivityListItem(
+                        activity = activity,
+                        onEdit = { onEditActivity(activity.id) },
+                        onDelete = { activityToDelete = activity },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 28.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    )
+                }
             }
+            item { Spacer(Modifier.height(80.dp)) }
         }
-        item { Spacer(Modifier.height(80.dp)) }
     }
 
     activityToDelete?.let { activity ->

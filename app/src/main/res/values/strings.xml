@@ -8,4 +8,6 @@
     <string name="channel_suggestions">Suggestions</string>
     <string name="action_done">Done</string>
     <string name="action_skip">Skip</string>
+    <string name="widget_title">Planner</string>
+    <string name="widget_description">Scrollable list of today\'s activities with tap-to-mark-done.</string>
 </resources>

@@ -22,4 +22,9 @@ sealed class Screen(val route: String) {
     object Analytics : Screen("analytics/{activityId}") {
         fun route(activityId: String) = "analytics/$activityId"
     }
+
+    object ClassDetail : Screen("class/{className}") {
+        fun route(className: String) =
+            "class/${java.net.URLEncoder.encode(className, "UTF-8")}"
+    }
 }

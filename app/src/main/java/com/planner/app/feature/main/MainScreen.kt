@@ -1,15 +1,17 @@
 package com.planner.app.feature.main
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.planner.app.core.components.PlannerBottomBar
 import com.planner.app.core.components.PlannerFab
-import com.planner.app.core.components.PlannerTopBar
 import com.planner.app.core.navigation.Screen
 import com.planner.app.feature.activities.ActivitiesContent
 import com.planner.app.feature.activities.ActivitiesViewModel
@@ -19,6 +21,14 @@ import com.planner.app.feature.dashboard.DashboardContent
 import com.planner.app.feature.dashboard.DashboardViewModel
 import com.planner.app.feature.home.HomeContent
 import com.planner.app.feature.home.HomeViewModel
+import kotlinx.coroutines.launch
+
+private val tabRoutes = listOf(
+    Screen.Home.route,
+    Screen.Calendar.route,
+    Screen.Dashboard.route,
+    Screen.Activities.route,
+)
 
 @Composable
 fun MainScreen(
@@ -26,90 +36,87 @@ fun MainScreen(
     onNavigateToCreate: () -> Unit,
     onNavigateToEdit: (String) -> Unit,
     onNavigateToAnalytics: (String) -> Unit,
+    onNavigateToClass: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 4 })
+    val scope = rememberCoroutineScope()
 
-    // Back swipe on any non-Home tab → go to Home first
-    BackHandler(enabled = selectedTab != 0) {
-        selectedTab = 0
+    // settledPage only changes when a swipe finishes — so MainScreen itself recomposes
+    // at most once per completed tab switch, never on every animation frame.
+    BackHandler(enabled = pagerState.settledPage != 0) {
+        scope.launch { pagerState.animateScrollToPage(0) }
     }
 
-    val tabRoutes = listOf(
-        Screen.Home.route,
-        Screen.Calendar.route,
-        Screen.Dashboard.route,
-        Screen.Activities.route,
-    )
-
-    // Obtain all ViewModels once — they stay alive for the lifetime of MainScreen
+    // Obtain all ViewModels once — they stay alive for the lifetime of MainScreen.
     val homeVm: HomeViewModel = hiltViewModel()
     val calendarVm: CalendarViewModel = hiltViewModel()
     val dashboardVm: DashboardViewModel = hiltViewModel()
     val activitiesVm: ActivitiesViewModel = hiltViewModel()
 
-    val settingsAction: @Composable () -> Unit = {
-        IconButton(onClick = onNavigateToSettings) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = "Settings",
-                tint = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-    }
-
     Scaffold(
-        topBar = {
-            when (selectedTab) {
-                1 -> PlannerTopBar(title = "Calendar", actions = { settingsAction() })
-                2 -> PlannerTopBar(title = "Stats", actions = { settingsAction() })
-                3 -> PlannerTopBar(title = "Activities", actions = { settingsAction() })
-                else -> {}
-            }
-        },
+        topBar = {},
         floatingActionButton = {
-            if (selectedTab == 0 || selectedTab == 3) PlannerFab(onClick = onNavigateToCreate)
+            // currentPage is read inside this @Composable lambda slot — only this slot
+            // recomposes mid-swipe, not the whole MainScreen.
+            val page = pagerState.currentPage
+            if (page == 0 || page == 3) PlannerFab(onClick = onNavigateToCreate)
         },
         bottomBar = {
+            // Same isolation: only this lambda recomposes when currentPage changes.
             PlannerBottomBar(
-                currentRoute = tabRoutes[selectedTab],
+                currentRoute = tabRoutes[pagerState.currentPage],
                 onNavigate = { screen ->
-                    selectedTab = when (screen.route) {
+                    val index = when (screen.route) {
                         Screen.Home.route       -> 0
                         Screen.Calendar.route   -> 1
                         Screen.Dashboard.route  -> 2
                         Screen.Activities.route -> 3
                         else -> 0
                     }
+                    scope.launch { pagerState.animateScrollToPage(index) }
                 },
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
-        when (selectedTab) {
-            0 -> HomeContent(
-                innerPadding = innerPadding,
-                onNavigateToLog = onNavigateToLog,
-                onNavigateToCreate = onNavigateToCreate,
-                onNavigateToAnalytics = onNavigateToAnalytics,
-                onNavigateToSettings = onNavigateToSettings,
-                viewModel = homeVm,
-            )
-            1 -> CalendarContent(
-                innerPadding = innerPadding,
-                onLogActivity = onNavigateToLog,
-                viewModel = calendarVm,
-            )
-            2 -> DashboardContent(
-                innerPadding = innerPadding,
-                onActivityClick = onNavigateToAnalytics,
-                viewModel = dashboardVm,
-            )
-            3 -> ActivitiesContent(
-                innerPadding = innerPadding,
-                onEditActivity = onNavigateToEdit,
-                viewModel = activitiesVm,
-            )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            beyondViewportPageCount = 1,
+            userScrollEnabled = true,
+        ) { page ->
+            when (page) {
+                0 -> HomeContent(
+                    innerPadding = PaddingValues(),
+                    onNavigateToLog = onNavigateToLog,
+                    onNavigateToCreate = onNavigateToCreate,
+                    onNavigateToAnalytics = onNavigateToAnalytics,
+                    onNavigateToSettings = onNavigateToSettings,
+                    viewModel = homeVm,
+                )
+                1 -> CalendarContent(
+                    innerPadding = PaddingValues(),
+                    onLogActivity = onNavigateToLog,
+                    onNavigateToSettings = onNavigateToSettings,
+                    viewModel = calendarVm,
+                )
+                2 -> DashboardContent(
+                    innerPadding = PaddingValues(),
+                    onNavigateToAnalytics = onNavigateToAnalytics,
+                    onNavigateToClass = onNavigateToClass,
+                    onNavigateToSettings = onNavigateToSettings,
+                    viewModel = dashboardVm,
+                )
+                3 -> ActivitiesContent(
+                    innerPadding = PaddingValues(),
+                    onEditActivity = onNavigateToEdit,
+                    onNavigateToSettings = onNavigateToSettings,
+                    viewModel = activitiesVm,
+                )
+            }
         }
     }
 }

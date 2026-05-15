@@ -12,6 +12,7 @@ import com.planner.app.domain.usecase.analytics.ComputeStreakUseCase
 import com.planner.app.domain.usecase.log.LogActivityUseCase
 import com.planner.app.core.utils.newId
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -63,7 +64,8 @@ class HomeViewModel @Inject constructor(
         prefs.username,
     ) { baseState, username ->
         baseState.copy(username = username)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+    }.flowOn(Dispatchers.Default)
+     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     fun toggleDone(activity: Activity) {
         viewModelScope.launch {
@@ -83,6 +85,8 @@ class HomeViewModel @Inject constructor(
                     )
                 )
             }
+            // Widget updates itself reactively via Room flow + collectAsState;
+            // no manual refresh hook needed.
         }
     }
 }

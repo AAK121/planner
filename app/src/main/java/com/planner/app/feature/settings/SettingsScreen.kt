@@ -1,13 +1,20 @@
 package com.planner.app.feature.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.planner.app.core.components.PlannerTopBar
 import com.planner.app.core.components.SectionLabel
@@ -85,12 +92,32 @@ fun SettingsContent(
 
         item { SectionLabel(text = "Notifications") }
         item {
+            val context = LocalContext.current
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+            ) { /* system handles result; no app action needed */ }
+
+            // Wraps a toggle setter: when flipping ON, request POST_NOTIFICATIONS
+            // first (no-op on Android < 13 or if already granted).
+            fun askThenSet(set: (Boolean) -> Unit): (Boolean) -> Unit = { enable ->
+                if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val granted = ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.POST_NOTIFICATIONS,
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (!granted) {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+                set(enable)
+            }
+
             Column(modifier = Modifier.padding(horizontal = 28.dp)) {
                 listOf(
-                    "Reminders"    to Pair(state.notifReminders, viewModel::setNotifReminders),
-                    "Streaks"      to Pair(state.notifStreaks, viewModel::setNotifStreaks),
-                    "Insights"     to Pair(state.notifInsights, viewModel::setNotifInsights),
-                    "Celebrations" to Pair(state.notifCelebrations, viewModel::setNotifCelebrations),
+                    "Activity reminders" to Pair(state.notifReminders, viewModel::setNotifReminders),
+                    "Daily plan summary" to Pair(state.notifDailyPlan, viewModel::setNotifDailyPlan),
+                    "Streaks"            to Pair(state.notifStreaks, viewModel::setNotifStreaks),
+                    "Insights"           to Pair(state.notifInsights, viewModel::setNotifInsights),
+                    "Celebrations"       to Pair(state.notifCelebrations, viewModel::setNotifCelebrations),
                 ).forEach { (label, pair) ->
                     val (enabled, setter) = pair
                     Row(
@@ -99,9 +126,22 @@ fun SettingsContent(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(label, style = MaterialTheme.typography.bodyLarge)
-                        Switch(checked = enabled, onCheckedChange = setter)
+                        Switch(checked = enabled, onCheckedChange = askThenSet(setter))
                     }
                 }
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = { viewModel.sendTestNotification() },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Send test notification", style = MaterialTheme.typography.bodyMedium)
+                }
+                Text(
+                    text = "Fires a notification immediately — verifies system permission + channel.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
             }
             Spacer(Modifier.height(20.dp))
         }

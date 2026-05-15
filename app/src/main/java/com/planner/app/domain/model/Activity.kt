@@ -7,7 +7,7 @@ data class Schedule(
     val daysOfWeek: List<Int> = emptyList(),    // 1=Mon … 7=Sun
     val timesOfDay: List<String> = emptyList(), // "HH:mm"
     val hasReminder: Boolean = false,
-    val reminderMinutesBefore: Int = 30,
+    val reminderMinutesBefore: Int = 10,
     val targetFrequencyPerWeek: Int? = null,    // for OCCASIONAL
     val dueDate: Long? = null,                  // epoch millis for ONE_OFF
 )
@@ -30,4 +30,6 @@ data class Activity(
     val goal: Goal? = null,
     val createdAt: Long,
     val isArchived: Boolean = false,
+    val trackAnalytics: Boolean = true,
+    val className: String? = null,  // null = ungrouped; activities sharing a className aggregate in stats
 )

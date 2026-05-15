@@ -93,6 +93,10 @@ dependencies {
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
 
+    // Glance (Compose for Home Screen widgets)
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+
     // Retrofit + Serialization
     implementation(libs.retrofit)
     implementation(libs.retrofit.serialization)

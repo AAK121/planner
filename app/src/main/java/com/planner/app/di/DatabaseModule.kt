@@ -20,6 +20,7 @@ object DatabaseModule {
     @Singleton
     fun providePlannerDatabase(@ApplicationContext context: Context): PlannerDatabase =
         Room.databaseBuilder(context, PlannerDatabase::class.java, PlannerDatabase.DATABASE_NAME)
+            .addMigrations(PlannerDatabase.MIGRATION_1_2, PlannerDatabase.MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
 

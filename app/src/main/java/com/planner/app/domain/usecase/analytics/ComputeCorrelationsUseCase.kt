@@ -14,10 +14,12 @@ class ComputeCorrelationsUseCase @Inject constructor() {
         logs: List<ActivityLog>,
         minSampleDays: Int = 14,
     ): List<ActivityCorrelation> {
+        if (activities.size < 2) return emptyList()
         val doneByActivity = logs
             .filter { it.status == LogStatus.DONE }
             .groupBy { it.activityId }
             .mapValues { (_, v) -> v.map { it.date }.toSet() }
+        if (doneByActivity.size < 2) return emptyList()
 
         val correlations = mutableListOf<ActivityCorrelation>()
         val ids = activities.map { it.id }

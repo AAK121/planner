@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.planner.app.feature.analytics.AnalyticsScreen
+import com.planner.app.feature.class_detail.ClassDetailScreen
 import com.planner.app.feature.create_activity.CreateActivityScreen
 import com.planner.app.feature.log_entry.LogEntryScreen
 import com.planner.app.feature.main.MainScreen
@@ -48,6 +49,7 @@ fun PlannerNavGraph(
                 onNavigateToCreate    = { navController.navigate(Screen.CreateActivity.route()) },
                 onNavigateToEdit      = { id -> navController.navigate(Screen.CreateActivity.route(id)) },
                 onNavigateToAnalytics = { id -> navController.navigate(Screen.Analytics.route(id)) },
+                onNavigateToClass     = { name -> navController.navigate(Screen.ClassDetail.route(name)) },
                 onNavigateToSettings  = { navController.navigate(Screen.Settings.route) },
             )
         }
@@ -89,6 +91,16 @@ fun PlannerNavGraph(
             AnalyticsScreen(
                 onBack = { navController.popBackStack() },
                 onEditActivity = { id -> navController.navigate(Screen.CreateActivity.route(id)) },
+            )
+        }
+
+        composable(
+            route = Screen.ClassDetail.route,
+            arguments = listOf(navArgument("className") { type = NavType.StringType })
+        ) {
+            ClassDetailScreen(
+                onBack = { navController.popBackStack() },
+                onActivityClick = { id -> navController.navigate(Screen.Analytics.route(id)) },
             )
         }
     }

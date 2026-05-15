@@ -31,6 +31,7 @@ class PreferencesDataStore @Inject constructor(
         val NOTIF_STREAKS        = booleanPreferencesKey("notif_streaks")
         val NOTIF_INSIGHTS       = booleanPreferencesKey("notif_insights")
         val NOTIF_CELEBRATIONS   = booleanPreferencesKey("notif_celebrations")
+        val NOTIF_DAILY_PLAN     = booleanPreferencesKey("notif_daily_plan")
         val USERNAME             = stringPreferencesKey("username")
     }
 
@@ -59,19 +60,23 @@ class PreferencesDataStore @Inject constructor(
     }
 
     val notifReminders: Flow<Boolean> = context.dataStore.data.map { prefs ->
-        prefs[Keys.NOTIF_REMINDERS] ?: true
+        prefs[Keys.NOTIF_REMINDERS] ?: false
     }
 
     val notifStreaks: Flow<Boolean> = context.dataStore.data.map { prefs ->
-        prefs[Keys.NOTIF_STREAKS] ?: true
+        prefs[Keys.NOTIF_STREAKS] ?: false
     }
 
     val notifInsights: Flow<Boolean> = context.dataStore.data.map { prefs ->
-        prefs[Keys.NOTIF_INSIGHTS] ?: true
+        prefs[Keys.NOTIF_INSIGHTS] ?: false
     }
 
     val notifCelebrations: Flow<Boolean> = context.dataStore.data.map { prefs ->
-        prefs[Keys.NOTIF_CELEBRATIONS] ?: true
+        prefs[Keys.NOTIF_CELEBRATIONS] ?: false
+    }
+
+    val notifDailyPlan: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.NOTIF_DAILY_PLAN] ?: false
     }
 
     val username: Flow<String> = context.dataStore.data.map { prefs ->
@@ -116,6 +121,10 @@ class PreferencesDataStore @Inject constructor(
 
     suspend fun setNotifCelebrations(enabled: Boolean) {
         context.dataStore.edit { it[Keys.NOTIF_CELEBRATIONS] = enabled }
+    }
+
+    suspend fun setNotifDailyPlan(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.NOTIF_DAILY_PLAN] = enabled }
     }
 
     suspend fun setUsername(name: String) {

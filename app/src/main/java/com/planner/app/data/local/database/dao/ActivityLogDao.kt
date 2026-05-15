@@ -42,6 +42,9 @@ interface ActivityLogDao {
     @Query("SELECT * FROM activity_logs WHERE dateEpochDay BETWEEN :fromDay AND :toDay ORDER BY dateEpochDay ASC")
     suspend fun getAllInRange(fromDay: Long, toDay: Long): List<ActivityLogEntity>
 
+    @Query("SELECT * FROM activity_logs WHERE dateEpochDay BETWEEN :fromDay AND :toDay ORDER BY dateEpochDay ASC")
+    fun observeAllInRange(fromDay: Long, toDay: Long): Flow<List<ActivityLogEntity>>
+
     @Query("SELECT * FROM activity_logs WHERE activityId = :activityId ORDER BY dateEpochDay DESC LIMIT :limit")
     suspend fun getRecentForActivity(activityId: String, limit: Int): List<ActivityLogEntity>
 }

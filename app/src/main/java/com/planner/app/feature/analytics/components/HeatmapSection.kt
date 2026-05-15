@@ -13,7 +13,7 @@ import com.planner.app.domain.model.HeatmapCell
 @Composable
 fun HeatmapSection(cells: List<HeatmapCell>, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        SectionLabel(text = "Activity this year")
+        SectionLabel(text = "Activity (last 12 weeks)")
         Surface(
             shape = ShapeCard,
             color = MaterialTheme.colorScheme.surface,

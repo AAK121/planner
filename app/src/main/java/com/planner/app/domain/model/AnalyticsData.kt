@@ -18,14 +18,17 @@ data class MissedDayPattern(
     val missRate: Float,  // 0.0–1.0
 )
 
+data class PeriodCount(
+    val label: String,    // "Week", "Month", "3 months", "9 months", "12 months"
+    val done: Int,
+    val skip: Int,
+)
+
 data class AnalyticsData(
     val activityId: String,
     val currentStreak: Int,
     val longestStreak: Int,
-    val complianceRate7d: Float,
-    val complianceRate30d: Float,
-    val complianceRate90d: Float,
-    val complianceRateAll: Float,
+    val periodCounts: List<PeriodCount>,
     val totalDone: Int,
     val totalLogged: Int,
     val heatmapCells: List<HeatmapCell>,

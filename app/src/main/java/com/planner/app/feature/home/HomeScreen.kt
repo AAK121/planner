@@ -26,6 +26,17 @@ fun HomeContent(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val pending = remember(state.activities, state.logs) {
+        state.activities.filter { activity ->
+            state.logs[activity.id]?.status.let { it == null || it == LogStatus.PENDING }
+        }
+    }
+    val done = remember(state.activities, state.logs) {
+        state.activities.filter { activity ->
+            state.logs[activity.id]?.status == LogStatus.DONE
+        }
+    }
+
     LazyColumn(
         contentPadding = innerPadding,
         modifier = Modifier.fillMaxSize(),
@@ -39,13 +50,6 @@ fun HomeContent(
                 totalCount = state.totalCount,
                 onNavigateToSettings = onNavigateToSettings,
             )
-        }
-
-        val pending = state.activities.filter { activity ->
-            state.logs[activity.id]?.status.let { it == null || it == LogStatus.PENDING }
-        }
-        val done = state.activities.filter { activity ->
-            state.logs[activity.id]?.status == LogStatus.DONE
         }
 
         if (pending.isNotEmpty()) {

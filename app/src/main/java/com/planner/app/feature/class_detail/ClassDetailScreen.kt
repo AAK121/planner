@@ -1,9 +1,9 @@
-package com.planner.app.feature.analytics
+package com.planner.app.feature.class_detail
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,65 +14,84 @@ import com.planner.app.core.components.PlannerTopBar
 import com.planner.app.core.components.SectionLabel
 import com.planner.app.core.theme.ShapeCard
 import com.planner.app.feature.analytics.components.HeatmapSection
-import com.planner.app.feature.analytics.components.NumberChart
-import com.planner.app.feature.analytics.components.PatternCard
 
 @Composable
-fun AnalyticsScreen(
+fun ClassDetailScreen(
     onBack: () -> Unit,
-    onEditActivity: (String) -> Unit,
-    viewModel: AnalyticsViewModel = hiltViewModel(),
+    onActivityClick: (String) -> Unit,
+    viewModel: ClassDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = {
-            PlannerTopBar(
-                title = state.activity?.name ?: "Analytics",
-                onBack = onBack,
-                actions = {
-                    state.activity?.let { activity ->
-                        IconButton(onClick = { onEditActivity(activity.id) }) {
-                            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-                        }
-                    }
-                },
-            )
-        },
+        topBar = { PlannerTopBar(title = state.className.ifBlank { "Class" }, onBack = onBack) },
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
-        if (state.isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        LazyColumn(
+            contentPadding = innerPadding,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            // Total done / skipped
+            item {
+                Surface(
+                    shape = ShapeCard,
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 1.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp, vertical = 16.dp),
+                ) {
+                    Row(modifier = Modifier.padding(20.dp)) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Total done",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = "${state.totalDone}",
+                                style = MaterialTheme.typography.displaySmall,
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Total skipped",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = "${state.totalSkipped}",
+                                style = MaterialTheme.typography.displaySmall,
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                        }
+                    }
+                }
             }
-            return@Scaffold
-        }
 
-        val data = state.analyticsData ?: return@Scaffold
-        LazyColumn(contentPadding = innerPadding) {
-
-            // Streak cards
+            // Streaks
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 28.dp, vertical = 16.dp),
+                        .padding(horizontal = 28.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     StatCard(
                         label = "Current streak",
-                        value = "🔥 ${data.currentStreak}",
+                        value = "🔥 ${state.currentStreak}",
                         modifier = Modifier.weight(1f),
                     )
                     StatCard(
                         label = "Longest streak",
-                        value = "⭐ ${data.longestStreak}",
+                        value = "⭐ ${state.longestStreak}",
                         modifier = Modifier.weight(1f),
                     )
                 }
             }
 
-            // Done / Skipped counts by period
+            // Done & skipped period table
             item {
                 SectionLabel(text = "Done & skipped")
                 Surface(
@@ -105,7 +124,7 @@ fun AnalyticsScreen(
                             )
                         }
                         Spacer(Modifier.height(8.dp))
-                        data.periodCounts.forEach { pc ->
+                        state.periodCounts.forEach { pc ->
                             Row(
                                 modifier = Modifier.padding(vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -137,34 +156,61 @@ fun AnalyticsScreen(
 
             // Heatmap
             item {
-                HeatmapSection(cells = data.heatmapCells)
+                HeatmapSection(cells = state.heatmapCells)
                 Spacer(Modifier.height(20.dp))
             }
 
-            // Charts — only when activity opts in to detailed analytics
-            if (state.activity?.trackAnalytics == true && data.chartSeries.isNotEmpty()) {
-                item { SectionLabel(text = "Progress") }
-                data.chartSeries.forEach { series ->
-                    item {
-                        NumberChart(series = series)
-                        Spacer(Modifier.height(12.dp))
-                    }
+            item {
+                Text(
+                    text = "Activities in this class",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp),
+                )
+            }
+
+            if (state.activities.isEmpty() && !state.isLoading) {
+                item {
+                    Text(
+                        text = "No activities in this class yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
+                    )
                 }
             }
 
-            // Patterns
-            if (data.missedDayPatterns.isNotEmpty()) {
-                item { SectionLabel(text = "Patterns") }
-                data.missedDayPatterns.forEach { pattern ->
-                    val dayLabel = listOf("Mon","Tue","Wed","Thu","Fri","Sat","Sun")[pattern.dayOfWeek - 1]
-                    item {
-                        PatternCard(
-                            text = "You skip $dayLabel ${(pattern.missRate * 100).toInt()}% of the time",
-                            modifier = Modifier.padding(horizontal = 28.dp),
+            items(state.activities, key = { it.activity.id }) { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onActivityClick(row.activity.id) }
+                        .padding(horizontal = 28.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = row.activity.emoji,
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = row.activity.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "${row.doneCount} done · ${row.skipCount} skipped",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 28.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                )
             }
 
             item { Spacer(Modifier.height(32.dp)) }

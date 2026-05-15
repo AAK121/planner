@@ -1,0 +1,599 @@
+================================================================================
+PLANNER APP — BUILD ERRORS LOG
+Android (Kotlin + Jetpack Compose + Hilt + Room + Vico)
+================================================================================
+
+This file documents every build error encountered during the initial build-fix
+session, their root causes, and how each was resolved. Use this as a reference
+when similar errors appear in future builds.
+
+--------------------------------------------------------------------------------
+ERROR 1 — Android VectorDrawable: <circle> element not supported
+--------------------------------------------------------------------------------
+FILE:    app/src/main/res/drawable/ic_launcher_foreground.xml
+
+ERROR MESSAGE:
+  attribute android:cx not found
+  attribute android:cy not found
+  attribute android:r  not found
+
+ROOT CAUSE:
+  The drawable used SVG-style <circle android:cx="..." android:cy="..." android:r="...">
+  Android VectorDrawable is NOT SVG. It only supports:
+    <vector>, <group>, <path>, <clip-path>, <gradient>, <item>
+  The <circle> element does not exist in Android VectorDrawable format.
+
+FIX:
+  Replace <circle> with a <path> using SVG arc commands to draw a circle:
+    android:pathData="M cx,cy-r A r,r 0 1 0 cx,cy+r A r,r 0 1 0 cx,cy-r Z"
+  Example (center 72,72 radius 8):
+    <path android:fillColor="#E8A44A"
+          android:pathData="M64,72 A8,8 0 1 0 80,72 A8,8 0 1 0 64,72 Z" />
+
+RULE FOR FUTURE:
+  Never use <circle>, <rect>, <ellipse>, <line>, or other SVG shape elements
+  in Android VectorDrawable XML. Always convert to <path> with pathData arcs.
+
+--------------------------------------------------------------------------------
+ERROR 2 — Room KSP: Multiple methods define the same type conversion
+--------------------------------------------------------------------------------
+FILE:    app/src/main/java/com/planner/app/data/local/database/converter/Converters.kt
+         app/src/main/java/com/planner/app/data/local/database/PlannerDatabase.kt
+
+ERROR MESSAGE:
+  error: [ksp] Multiple methods define the same conversion (Long? -> Long?)
+  error: [ksp] Multiple methods define the same conversion (Long? -> Long?)
+
+ROOT CAUSE:
+  Two @TypeConverter methods were defined with identical input and output types
+  (Long? → Long?). Room KSP rejects any duplicate type conversion pair.
+  Additionally, Long, Int, Boolean, and String are Room-native types — Room
+  handles them automatically without any TypeConverter. The converters were
+  no-ops that caused the conflict.
+
+FIX:
+  1. Removed both duplicate @TypeConverter methods from Converters.kt.
+  2. The class is now empty (kept as a placeholder stub).
+  3. Removed @TypeConverters(Converters::class) from PlannerDatabase.kt since
+     no custom converters are needed (JSON fields are stored as plain String).
+
+RULE FOR FUTURE:
+  - Room natively handles: Long, Int, Boolean, String, Float, Double, ByteArray.
+    Never write @TypeConverter for these types.
+  - Each (InputType → OutputType) pair must be unique across all @TypeConverter
+    methods in a @TypeConverters class.
+  - JSON blobs should be stored as String columns and serialized/deserialized
+    in the repository layer, not via TypeConverters.
+
+--------------------------------------------------------------------------------
+ERROR 3 — Kotlin: Assignment is not an expression (single-expression function)
+--------------------------------------------------------------------------------
+FILE:    app/src/main/java/com/planner/app/feature/create_activity/CreateActivityViewModel.kt
+         (lines 68–83)
+
+ERROR MESSAGE:
+  e: Only expressions are allowed in this context.
+  (reported on each setter function using expression-body syntax)
+
+ROOT CAUSE:
+  In Kotlin, assignment (=) is a STATEMENT, not an expression.
+  Single-expression function bodies require an expression after the =:
+    fun foo() = someExpression   // OK — someExpression has a value
+    fun foo() = x = y            // ERROR — assignment has no value in Kotlin
+
+  The setters were written as:
+    fun setName(name: String) = _state.value = _state.value.copy(name = name)
+  This tries to use an assignment as an expression body, which is invalid.
+
+FIX:
+  Change expression bodies to block bodies for all setter functions:
+    // BEFORE (broken):
+    fun setName(name: String) = _state.value = _state.value.copy(name = name)
+
+    // AFTER (fixed):
+    fun setName(name: String) { _state.value = _state.value.copy(name = name) }
+
+  Affected functions: setName, setType, setColor, setEmoji, addTime, removeTime,
+  setHasReminder, setVariableTree, setGoal, nextStep, prevStep
+
+RULE FOR FUTURE:
+  Only use single-expression body (fun foo() = ...) when the right-hand side
+  is a pure expression (function call, arithmetic, conditional, etc.).
+  State assignments, property writes, and void-style calls must use block bodies.
+
+--------------------------------------------------------------------------------
+ERROR 4 — Kotlin: Return type mismatch (KFunction1<Boolean, Job> vs Function1<Boolean, Unit>)
+--------------------------------------------------------------------------------
+FILE:    app/src/main/java/com/planner/app/feature/settings/SettingsScreen.kt (line ~74)
+         app/src/main/java/com/planner/app/feature/settings/SettingsViewModel.kt
+
+ERROR MESSAGE:
+  e: Argument type mismatch:
+     actual type is   'kotlin.reflect.KFunction1<kotlin.Boolean, kotlinx.coroutines.Job>'
+     but expected was 'kotlin.Function1<kotlin.Boolean, kotlin.Unit>?'
+
+ROOT CAUSE:
+  The private helper in SettingsViewModel was written as:
+    private fun launch(block: suspend () -> Unit) = viewModelScope.launch { block() }
+
+  viewModelScope.launch { } returns a Job.
+  Because this uses an expression body, the helper's return type is inferred as Job.
+  All public setters (setNotifReminders, setLlmCloud, etc.) call this helper:
+    fun setNotifReminders(v: Boolean) = launch { prefs.setNotifReminders(v) }
+  They also inherit the Job return type via expression body.
+
+  Compose Switch.onCheckedChange expects (Boolean) -> Unit.
+  Passing a method reference whose type is KFunction1<Boolean, Job> fails
+  because Job ≠ Unit.
+
+FIX:
+  Change the private launch helper to a block body so it returns Unit:
+    // BEFORE (returns Job):
+    private fun launch(block: suspend () -> Unit) = viewModelScope.launch { block() }
+
+    // AFTER (returns Unit):
+    private fun launch(block: suspend () -> Unit) { viewModelScope.launch { block() } }
+
+RULE FOR FUTURE:
+  viewModelScope.launch { } returns Job. If your helper wraps launch with an
+  expression body, every caller inherits the Job return type.
+  Always use a block body for launch-wrapper helpers so the return type is Unit.
+  This is critical for Compose callbacks (onClick, onCheckedChange, onValueChange)
+  which all expect (T) -> Unit, not (T) -> Job.
+
+--------------------------------------------------------------------------------
+ERROR 5 — Type mismatch: Double vs Float in Vico FloatEntry
+--------------------------------------------------------------------------------
+FILE:    app/src/main/java/com/planner/app/feature/analytics/components/NumberChart.kt
+         (line 26)
+
+ERROR MESSAGE:
+  e: Argument type mismatch:
+     actual type is 'kotlin.Double'
+     but 'kotlin.Float' was expected.
+
+ROOT CAUSE:
+  ChartSeries.dataPoints is List<Pair<LocalDate, Double>>.
+  Vico 1.x FloatEntry constructor is: FloatEntry(x: Float, y: Float).
+  The y value was passed as Double without conversion:
+    FloatEntry(i.toFloat(), v)   // v is Double, FloatEntry expects Float
+
+FIX:
+  Explicitly cast v to Float:
+    FloatEntry(i.toFloat(), v.toFloat())
+
+RULE FOR FUTURE:
+  Kotlin does NOT implicitly widen or narrow numeric types.
+  Double and Float are distinct — always call .toFloat() when Vico (or any
+  library with Float parameters) receives a Double value.
+  Also note: Vico 1.15.0 uses FloatEntry / entryModelOf / Chart() / lineChart().
+  Do NOT use the Vico 2.x API (CartesianChartHost, etc.) — the dependency is
+  pinned to 1.15.0.
+
+--------------------------------------------------------------------------------
+ERROR 6 — Missing method in Repository interface / implementation
+--------------------------------------------------------------------------------
+FILE:    app/src/main/java/com/planner/app/domain/repository/ActivityRepository.kt
+         app/src/main/java/com/planner/app/data/repository/ActivityRepositoryImpl.kt
+
+ERROR MESSAGE:
+  e: Class 'ActivityRepositoryImpl' is not abstract and does not implement
+     abstract member: suspend fun getAll(): List<Activity>
+  (or: unresolved reference 'getAll' in WorkManager workers)
+
+ROOT CAUSE:
+  WorkManager workers (ScheduledReminderWorker, StreakCheckWorker,
+  WeeklyInsightWorker) called activityRepository.getAll() as a suspend fun.
+  This method existed in the impl and the workers but was never declared in
+  the ActivityRepository interface, causing either:
+    - Interface contract violation (impl doesn't match interface)
+    - Unresolved reference (workers call a method not on the interface type)
+
+FIX:
+  Added the method to the interface:
+    suspend fun getAll(): List<Activity>
+  Added implementation in ActivityRepositoryImpl:
+    override suspend fun getAll(): List<Activity> = dao.getAll().map { it.toDomain() }
+
+RULE FOR FUTURE:
+  Repository interfaces must declare every method that any caller uses.
+  WorkManager workers inject the interface type — they cannot see impl-only methods.
+  Always add new methods to the interface first, then implement.
+
+--------------------------------------------------------------------------------
+ERROR 7 — Combining suspend call with Flow using flowOf() (wrong pattern)
+--------------------------------------------------------------------------------
+FILE:    app/src/main/java/com/planner/app/feature/analytics/AnalyticsViewModel.kt
+
+ERROR MESSAGE:
+  e: Suspension functions can be called only within coroutine body.
+  (suspend fun called inside flowOf { } which is not a coroutine context)
+
+ROOT CAUSE:
+  flowOf(suspendFun()) calls the suspend function eagerly at the point of
+  flowOf() invocation, which is NOT inside a coroutine. flowOf() is not
+  a coroutine builder — it just wraps already-computed values.
+
+  Wrong pattern:
+    .combine(flowOf(activityRepository.getById(activityId))) { a, b -> ... }
+
+FIX:
+  Use flow { emit(suspendFun()) } which IS a coroutine builder:
+    .combine(flow { emit(activityRepository.getById(activityId)) }) { a, b -> ... }
+
+RULE FOR FUTURE:
+  flowOf(x) evaluates x immediately, outside any coroutine.
+  flow { emit(x) } runs x inside a coroutine launched by the flow collector.
+  Always use flow { emit(suspendFun()) } when wrapping a suspend call into a
+  Flow to combine with other flows.
+
+--------------------------------------------------------------------------------
+ERROR 8 — Vico API version mismatch (2.x alpha vs 1.x stable)
+--------------------------------------------------------------------------------
+FILE:    libs.versions.toml, any file importing Vico composables
+
+ERROR MESSAGE:
+  e: Unresolved reference: CartesianChartHost
+  e: Unresolved reference: rememberCartesianChart
+  (or similar 2.x API symbols)
+
+ROOT CAUSE:
+  The dependency was initially set to vico 2.0.0-alpha.28 which has a
+  completely different API from the stable 1.x series.
+  The codebase uses the 1.x stable API:
+    Chart(), lineChart(), entryModelOf(), FloatEntry,
+    rememberStartAxis(), rememberBottomAxis()
+
+FIX:
+  Downgraded in libs.versions.toml:
+    vico = "1.15.0"
+
+RULE FOR FUTURE:
+  Vico 1.x and 2.x have incompatible APIs. This project is pinned to 1.15.0.
+  Do not upgrade to 2.x without rewriting all chart composables.
+  Stable 1.x imports are from:
+    com.patrykandpatrick.vico.compose.chart.*
+    com.patrykandpatrick.vico.compose.axis.*
+    com.patrykandpatrick.vico.core.entry.*
+
+--------------------------------------------------------------------------------
+ERROR 9 — Missing Google Fonts dependency / runtime font loading
+--------------------------------------------------------------------------------
+FILE:    app/build.gradle.kts, core/theme/Type.kt, AndroidManifest.xml
+
+ERROR MESSAGE:
+  e: Unresolved reference: GoogleFont
+  e: Unresolved reference: FontFamily (with GoogleFont overload)
+  (at runtime: font not loaded — blank text)
+
+ROOT CAUSE:
+  Font files (dm_sans_regular.ttf etc.) were referenced but not present in
+  res/font/. The Compose Google Fonts API was not set up.
+
+FIX:
+  1. Added dependency in build.gradle.kts:
+       implementation(libs.androidx.compose.ui.text.google.fonts)
+  2. Rewrote Type.kt to use GoogleFont.Provider:
+       private val provider = GoogleFont.Provider(
+           providerAuthority = "com.google.android.gms.fonts",
+           providerPackage  = "com.google.android.gms",
+           certificates     = R.array.com_google_android_gms_fonts_certs,
+       )
+       val DmSans = FontFamily(Font(googleFont = GoogleFont("DM Sans"), ...))
+  3. Added in AndroidManifest.xml <application>:
+       <meta-data android:name="preloaded_fonts"
+                  android:resource="@array/preloaded_fonts" />
+
+RULE FOR FUTURE:
+  If TTF files are not bundled in res/font/, use the Compose Google Fonts API.
+  No TTF files needed — fonts download from GMS at runtime.
+  The certs array (com_google_android_gms_fonts_certs) is provided automatically
+  by the google-fonts dependency; do not define it manually.
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+ #  | File / Layer            | Error Type                        | Fixed By
+----|-------------------------|-----------------------------------|----------------------------
+ 1  | res/drawable XML        | Invalid VectorDrawable element    | Replace <circle> with <path>
+ 2  | Room KSP / Converters   | Duplicate @TypeConverter pair     | Remove no-op converters
+ 3  | ViewModel (Kotlin)      | Assignment used as expression     | Use block body { } not =
+ 4  | ViewModel / Screen      | Job returned instead of Unit      | Block body on launch helper
+ 5  | Vico chart composable   | Double passed where Float needed  | .toFloat() explicit cast
+ 6  | Repository interface    | Missing interface method          | Add method to interface
+ 7  | ViewModel Flow combine  | suspend called outside coroutine  | flow { emit() } not flowOf()
+ 8  | Vico dependency         | 2.x alpha API used in 1.x code    | Downgrade to 1.15.0
+ 9  | Fonts / Manifest        | TTF files missing                 | Compose Google Fonts API
+
+================================================================================
+END OF LOG (session 1)
+================================================================================
+
+
+================================================================================
+SESSION 2 — ANDROID-SPECIFIC ISSUES (notifications, alarms, widgets, install)
+================================================================================
+
+The errors below were the main Android-platform gotchas hit while wiring
+notifications, AlarmManager, Glance widgets, and reinstall behaviour. They
+weren't compile errors so much as silent failures or unexpected runtime
+behaviour — the kind that produce zero log output but break the feature.
+
+--------------------------------------------------------------------------------
+ERROR 10 — Implicit `Intent(action)` to a BroadcastReceiver is silently dropped
+--------------------------------------------------------------------------------
+FILE:    notifications/NotificationHelper.kt
+         AndroidManifest.xml
+
+SYMPTOM:
+  Tapping the "Done" action on a reminder notification did nothing — no log
+  write, no notification dismissal. No crash, no logcat error.
+
+ROOT CAUSE:
+  The PendingIntent was built with `Intent(ACTION_QUICK_DONE)` — an implicit
+  intent carrying only an action string. `DirectReplyReceiver` was declared
+  in the manifest without any <intent-filter>, so the broadcast never matched
+  the receiver. On Android 8+, implicit broadcasts to manifest-declared
+  receivers without a filter are not delivered at all.
+
+FIX:
+  Use an EXPLICIT intent that targets the receiver by class:
+    Intent(context, DirectReplyReceiver::class.java).apply {
+        action = ACTION_QUICK_DONE
+        putExtra(EXTRA_ACTIVITY_ID, activityId)
+    }
+  No <intent-filter> needed — the OS routes by component, the action string
+  is just metadata the receiver reads to dispatch.
+
+RULE FOR FUTURE:
+  In-app broadcasts (PendingIntent for notification actions, AlarmManager
+  triggers, app-internal events) should always use explicit intents:
+  `Intent(context, SomeReceiver::class.java).setAction(...)`. Reserve
+  implicit intents for cross-app communication only.
+
+--------------------------------------------------------------------------------
+ERROR 11 — POST_NOTIFICATIONS runtime permission silently denied (Android 13+)
+--------------------------------------------------------------------------------
+FILE:    MainActivity.kt
+         feature/settings/SettingsScreen.kt
+
+SYMPTOM:
+  NotificationManager.notify() was called but no notification ever appeared
+  on the device. No exception. No logcat warning.
+
+ROOT CAUSE:
+  Android 13 (API 33) made POST_NOTIFICATIONS a runtime permission. The
+  manifest declaration is necessary but not sufficient — until the user
+  grants the permission via the system dialog, every `notify()` call is a
+  no-op (handled silently by NotificationManagerCompat).
+
+FIX:
+  1. In MainActivity.onCreate, check the permission and launch a request
+     contract via `registerForActivityResult(RequestPermission())`:
+       if (Build.VERSION.SDK_INT >= TIRAMISU
+           && ContextCompat.checkSelfPermission(this, POST_NOTIFICATIONS)
+              != PERMISSION_GRANTED) {
+           requestNotificationPermission.launch(POST_NOTIFICATIONS)
+       }
+  2. Also re-request when the user flips a notification toggle ON in Settings
+     (in case they denied at first-launch). Use the same contract pattern
+     wrapped around the toggle's onCheckedChange setter.
+
+RULE FOR FUTURE:
+  Any new app targeting API 33+ must request POST_NOTIFICATIONS at runtime.
+  Always check `Build.VERSION.SDK_INT >= TIRAMISU` first because on older
+  APIs the permission is implicit and the constant isn't available below
+  API level 33.
+
+--------------------------------------------------------------------------------
+ERROR 12 — Notification channel importance is immutable after creation
+--------------------------------------------------------------------------------
+FILE:    notifications/NotificationChannels.kt
+
+SYMPTOM:
+  Changed `IMPORTANCE_DEFAULT` to `IMPORTANCE_HIGH` for the reminders channel
+  in `NotificationChannels.createAll`, rebuilt, but notifications still
+  arrived silently in the shade — no heads-up banner.
+
+ROOT CAUSE:
+  Once a NotificationChannel is created with a given ID, Android keeps the
+  user-facing importance setting forever. Calling `createNotificationChannel`
+  again with the same ID and a different importance is a no-op — the system
+  keeps whatever the user (or original install) set.
+
+FIX:
+  Bump the channel ID: `"planner_reminders"` → `"planner_reminders_v2"`.
+  Update every reference to the channel constant. On next install (or new
+  channel-create call), Android creates a fresh channel with the new
+  importance. The old channel ID becomes orphaned (harmless).
+
+RULE FOR FUTURE:
+  To change a channel's importance / vibration / sound, you must create a
+  channel under a NEW ID. Never try to "upgrade" an existing channel. Plan
+  channel IDs accordingly — `_v2`, `_v3` suffixes are an acceptable pattern.
+
+--------------------------------------------------------------------------------
+ERROR 13 — AlarmManager.setExactAndAllowWhileIdle is rate-limited under Doze
+--------------------------------------------------------------------------------
+FILE:    notifications/ReminderScheduler.kt
+
+SYMPTOM:
+  Reminder set to fire at 12:55 actually fired at 12:55:35. Postpone alarms
+  drifted 3–5 seconds even though the API name said "exact".
+
+ROOT CAUSE:
+  `setExactAndAllowWhileIdle` is documented exact but Android Doze mode
+  applies a per-app rate limit — roughly one fire per 15 minutes. The OS
+  defers later alarms inside that window. Even outside Doze, the broadcast
+  queue can stall them tens of seconds.
+
+FIX:
+  Use `setAlarmClock(AlarmClockInfo(triggerAtMillis, showIntent), pi)`. This
+  is the strongest exact-alarm API — designed for clock-app alarms and
+  exempt from Doze/battery-saver throttling. Fires within ~1 second of the
+  target time on all devices.
+    val showIntent = PendingIntent.getActivity(context, code, Intent(...), ...)
+    am.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, showIntent), pi)
+
+  Side effect: a small alarm-clock icon appears in the status bar while any
+  alarm is pending. This is the system signal that "this app has user-facing
+  alarms scheduled" — expected for reminder apps.
+
+RULE FOR FUTURE:
+  - `setAlarmClock` — user-visible, time-critical alarms (THIS is the right
+    API for reminders).
+  - `setExactAndAllowWhileIdle` — exact but throttled. Avoid.
+  - `setAndAllowWhileIdle` — inexact, fires when the OS feels like it.
+  - `setExact` — exact but blocked entirely by Doze.
+  - Manifest must declare `USE_EXACT_ALARM` (auto-grants on API 33+ for
+    alarm-category apps) AND `SCHEDULE_EXACT_ALARM` (user-grant on
+    API 31/32). The code falls back to inexact if neither is available.
+
+--------------------------------------------------------------------------------
+ERROR 14 — BroadcastReceiver tearing down before async DB write completes
+--------------------------------------------------------------------------------
+FILE:    notifications/DirectReplyReceiver.kt
+
+SYMPTOM:
+  After tapping "Done" on a notification, sometimes the log was not written.
+  Inconsistent — worked on Pixel, missed on Samsung.
+
+ROOT CAUSE:
+  The receiver used a free-floating coroutine:
+    CoroutineScope(Dispatchers.IO).launch { logActivity(log) }
+  Android can kill a BroadcastReceiver's process as soon as onReceive returns,
+  cutting the coroutine short. There's no contract that keeps the process
+  alive past the onReceive call.
+
+FIX:
+  Use `goAsync()` which keeps the receiver alive for up to 10 seconds, then
+  call `pendingResult.finish()` when the work is done:
+    val pendingResult = goAsync()
+    CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+        try { logActivity(log) } finally { pendingResult.finish() }
+    }
+
+RULE FOR FUTURE:
+  Any BroadcastReceiver doing async work (DB write, network call, file I/O)
+  must use `goAsync()`. Loose CoroutineScopes leak and lose work.
+
+--------------------------------------------------------------------------------
+ERROR 15 — Android Auto Backup re-restoring app data after uninstall
+--------------------------------------------------------------------------------
+FILE:    AndroidManifest.xml
+
+SYMPTOM:
+  Uninstalling the app and reinstalling it from a fresh build resulted in
+  the previous DataStore preferences and Room database being restored — old
+  activities, logs, settings all came back.
+
+ROOT CAUSE:
+  `android:allowBackup="true"` (the default) enables Android Auto Backup,
+  which uploads up to 25 MB of app data to Google Drive automatically and
+  restores it on reinstall. DataStore, SharedPrefs, internal-storage Room
+  databases — all included unless explicitly excluded.
+
+FIX:
+  Set `android:allowBackup="false"` on the `<application>` element, with
+  `tools:replace="android:allowBackup"` as defence against future library
+  manifest merges trying to flip it back to true.
+
+RULE FOR FUTURE:
+  For dev builds, ALWAYS set allowBackup=false during active iteration —
+  fresh-install testing is impossible otherwise. For production, decide
+  based on whether you want cloud-backed cross-device data restoration; if
+  yes, also set `android:dataExtractionRules="@xml/data_extraction_rules"`
+  with explicit include/exclude lists.
+
+--------------------------------------------------------------------------------
+ERROR 16 — Glance `updateAll` unresolved reference
+--------------------------------------------------------------------------------
+FILE:    feature/widget/MarkDoneAction.kt
+         feature/home/HomeViewModel.kt (during transition)
+
+ERROR MESSAGE:
+  e: Unresolved reference 'updateAll'.
+
+ROOT CAUSE:
+  `updateAll` is an extension function on `GlanceAppWidget`, but lives in
+  the top-level `androidx.glance.appwidget` package — not on the class
+  itself. The compiler doesn't auto-import top-level extensions.
+
+FIX:
+  Add the explicit import:
+    import androidx.glance.appwidget.updateAll
+  Then call: `TodayActivitiesWidget().updateAll(context)` — note it's a
+  suspend function and must be in a coroutine scope.
+
+RULE FOR FUTURE:
+  Glance functions that look like methods are often package-level extension
+  functions: `updateAll`, `update`, `updateIf`, etc. When IDE auto-import
+  doesn't kick in (e.g. in suspend coroutines), add manually.
+
+--------------------------------------------------------------------------------
+ERROR 17 — Glance widget showing stale data after in-app changes
+--------------------------------------------------------------------------------
+FILE:    feature/widget/TodayActivitiesWidget.kt
+
+SYMPTOM:
+  Mark Done in the app → widget didn't reflect for minutes, then suddenly
+  jumped to current state. Stale-state taps caused confusing toggles.
+
+ROOT CAUSE:
+  `provideGlance` was reading data via `.first()` on Room Flows — a one-shot
+  snapshot. After that snapshot, the composition was frozen until someone
+  called `updateAll(context)`. We had three manual refresh hooks but the
+  launcher batches RemoteViews binding, causing visible lag.
+
+FIX:
+  Make the widget reactive — observe the flows INSIDE provideContent via
+  `collectAsState`:
+    provideContent {
+        val activities by useCase.invoke(today).collectAsState(emptyList())
+        val logs by repo.observeForDay(today).collectAsState(emptyList())
+        Body(activities, logs)
+    }
+  Glance keeps the composition alive for the widget's lifetime; every flow
+  emission triggers recomposition automatically. No manual `updateAll()`
+  calls needed.
+
+RULE FOR FUTURE:
+  Glance widgets should use `collectAsState` / `LaunchedEffect` inside
+  `provideContent` to observe live data, not snapshot via `.first()` in
+  `provideGlance`. The composition stays alive for as long as the widget
+  exists on the home screen — flows are observed reactively.
+
+--------------------------------------------------------------------------------
+ERROR 18 — Glance widget clickable modifier order changes touch target
+--------------------------------------------------------------------------------
+FILE:    feature/widget/TodayActivitiesWidget.kt
+
+SYMPTOM:
+  Taps near the rounded edges of a widget row did nothing. Only the inner
+  content area was responsive.
+
+ROOT CAUSE:
+  Modifier order in Glance is like Compose — outside-in. Placing
+  `.clickable(...)` AFTER `.padding(...).background(...)` shrinks the click
+  layer to the inner content area; taps in the padding region are dropped.
+
+FIX:
+  Put `.clickable` BEFORE the visual modifiers, so the entire row including
+  padding is the click target:
+    GlanceModifier
+        .fillMaxWidth()
+        .padding(vertical = 4.dp)
+        .clickable(actionRunCallback<...>(...))   // entire row is clickable
+        .cornerRadius(12.dp)
+        .background(...)
+        .padding(horizontal = 10.dp, vertical = 8.dp)
+
+RULE FOR FUTURE:
+  For Glance row/column rows, `.clickable` belongs near the top of the
+  modifier chain, before `.padding`/`.background`/`.cornerRadius`. Mirror
+  the Compose convention.
+
+================================================================================
+END OF LOG (session 2)
+================================================================================

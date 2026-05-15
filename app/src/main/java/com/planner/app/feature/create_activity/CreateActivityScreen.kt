@@ -1,5 +1,6 @@
 package com.planner.app.feature.create_activity
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,10 @@ fun CreateActivityScreen(
     viewModel: CreateActivityViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+
+    BackHandler(enabled = state.currentStep > 0) {
+        viewModel.prevStep()
+    }
 
     LaunchedEffect(state.savedSuccessfully) {
         if (state.savedSuccessfully) onDone()
@@ -62,11 +68,16 @@ fun CreateActivityScreen(
                 when (state.currentStep) {
                     0 -> BasicsStep(
                         name = state.name,
+                        nameError = state.nameError,
                         type = state.type,
                         emoji = state.emoji,
+                        trackAnalytics = state.trackAnalytics,
+                        className = state.className,
                         onNameChange = viewModel::setName,
                         onTypeChange = viewModel::setType,
                         onEmojiChange = viewModel::setEmoji,
+                        onTrackAnalyticsChange = viewModel::setTrackAnalytics,
+                        onClassNameChange = viewModel::setClassName,
                         onSelectTemplate = { template ->
                             viewModel.setName(template.name)
                             viewModel.setEmoji(template.emoji)
@@ -77,8 +88,14 @@ fun CreateActivityScreen(
                         },
                     )
                     1 -> ScheduleStep(
+                        type = state.type,
                         selectedDays = state.selectedDays,
+                        times = state.times,
+                        dueDate = state.dueDate,
                         onToggleDay = viewModel::toggleDay,
+                        onAddTime = viewModel::addTime,
+                        onRemoveTime = viewModel::removeTime,
+                        onDueDateChange = viewModel::setDueDate,
                     )
                     2 -> TrackingStep(
                         variableTree = state.variableTree,
@@ -99,7 +116,7 @@ fun CreateActivityScreen(
                     else viewModel.save()
                 },
                 shape = ShapePill,
-                enabled = state.name.isNotBlank() && !state.isSaving,
+                enabled = state.name.isNotBlank() && state.nameError == null && !state.isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -134,11 +151,16 @@ private fun StepIndicator(currentStep: Int, steps: List<String>, onStepClick: (I
 @Composable
 private fun BasicsStep(
     name: String,
+    nameError: String?,
     type: ActivityType,
     emoji: String,
+    trackAnalytics: Boolean,
+    className: String,
     onNameChange: (String) -> Unit,
     onTypeChange: (ActivityType) -> Unit,
     onEmojiChange: (String) -> Unit,
+    onTrackAnalyticsChange: (Boolean) -> Unit,
+    onClassNameChange: (String) -> Unit,
     onSelectTemplate: (com.planner.app.feature.create_activity.components.ActivityTemplate) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -151,6 +173,25 @@ private fun BasicsStep(
             onValueChange = onNameChange,
             label = { Text("Activity name") },
             placeholder = { Text("e.g. Morning run") },
+            isError = nameError != null,
+            supportingText = if (nameError != null) {
+                {
+                    Text(
+                        text = nameError,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            } else null,
+            modifier = Modifier.fillMaxWidth(),
+            shape = ShapeInput,
+            singleLine = true,
+        )
+
+        OutlinedTextField(
+            value = className,
+            onValueChange = onClassNameChange,
+            label = { Text("Class (optional)") },
+            placeholder = { Text("e.g. gym — groups stats with other activities") },
             modifier = Modifier.fillMaxWidth(),
             shape = ShapeInput,
             singleLine = true,
@@ -171,12 +212,45 @@ private fun BasicsStep(
                 )
             }
         }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Track detailed analytics", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = "Show trends and insights for this activity",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = trackAnalytics, onCheckedChange = onTrackAnalyticsChange)
+        }
     }
 }
 
 @Composable
-private fun ScheduleStep(selectedDays: List<Int>, onToggleDay: (Int) -> Unit) {
-    SchedulePicker(selectedDays = selectedDays, onToggleDay = onToggleDay)
+private fun ScheduleStep(
+    type: ActivityType,
+    selectedDays: List<Int>,
+    times: List<String>,
+    dueDate: Long?,
+    onToggleDay: (Int) -> Unit,
+    onAddTime: (String) -> Unit,
+    onRemoveTime: (String) -> Unit,
+    onDueDateChange: (Long?) -> Unit,
+) {
+    SchedulePicker(
+        type = type,
+        selectedDays = selectedDays,
+        times = times,
+        dueDate = dueDate,
+        onToggleDay = onToggleDay,
+        onAddTime = onAddTime,
+        onRemoveTime = onRemoveTime,
+        onDueDateChange = onDueDateChange,
+    )
 }
 
 @Composable
@@ -196,7 +270,7 @@ private fun TrackingStep(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(16.dp))
-        VariableTreeEditor(nodes = variableTree, onNodesChanged = onTreeChange)
+        VariableTreeEditor(nodes = variableTree, onNodesChange = onTreeChange)
     }
 }
 

@@ -9,10 +9,10 @@ import javax.inject.Inject
 class ComputeHeatmapUseCase @Inject constructor() {
     operator fun invoke(
         logs: List<ActivityLog>,
-        weeksBack: Int = 52,
+        weeksBack: Int = 12,
         today: LocalDate = LocalDate.now(),
     ): List<HeatmapCell> {
-        val from = today.minusWeeks(weeksBack.toLong())
+        val from = today.minusWeeks(weeksBack.toLong()).plusDays(1)
         val logsByDate = logs.groupBy { it.date }
 
         val cells = mutableListOf<HeatmapCell>()

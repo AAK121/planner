@@ -24,7 +24,7 @@ class AnalyticsViewModel @Inject constructor(
     private val activityRepository: ActivityRepository,
     private val getLogsForActivity: GetLogsForActivityUseCase,
     private val computeStreak: ComputeStreakUseCase,
-    private val computeCompliance: ComputeComplianceUseCase,
+    private val computeCounts: ComputeActivityCountsUseCase,
     private val computeHeatmap: ComputeHeatmapUseCase,
 ) : ViewModel() {
 
@@ -35,20 +35,19 @@ class AnalyticsViewModel @Inject constructor(
             if (activity == null) return@combine AnalyticsUiState(isLoading = false)
             val today = LocalDate.now()
             val streak = computeStreak(logs, today)
-            val compliance = computeCompliance(activity, logs, today)
+            val counts = computeCounts(logs, today)
             val heatmap = computeHeatmap(logs)
+            val totalDone = logs.count { it.status == LogStatus.DONE }
+
             AnalyticsUiState(
                 activity = activity,
                 analyticsData = AnalyticsData(
                     activityId = activityId,
                     currentStreak = streak.current,
                     longestStreak = streak.longest,
-                    complianceRate7d = compliance.rate7d,
-                    complianceRate30d = compliance.rate30d,
-                    complianceRate90d = compliance.rate90d,
-                    complianceRateAll = compliance.rateAll,
-                    totalDone = compliance.totalDone,
-                    totalLogged = compliance.totalLogged,
+                    periodCounts = counts,
+                    totalDone = totalDone,
+                    totalLogged = logs.size,
                     heatmapCells = heatmap,
                     chartSeries = emptyList(),
                     missedDayPatterns = emptyList(),

@@ -5,7 +5,10 @@ import com.planner.app.data.local.database.entity.ActivityLogEntity
 import com.planner.app.domain.model.ActivityLog
 import com.planner.app.domain.model.LogStatus
 import com.planner.app.domain.repository.LogRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -19,10 +22,22 @@ class LogRepositoryImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     override fun observeForActivity(activityId: String): Flow<List<ActivityLog>> =
-        dao.observeForActivity(activityId).map { it.map { e -> e.toDomain() } }
+        dao.observeForActivity(activityId)
+            .map { it.map { e -> e.toDomain() } }
+            .flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
 
     override fun observeForDay(date: LocalDate): Flow<List<ActivityLog>> =
-        dao.observeForDay(date.toEpochDay()).map { it.map { e -> e.toDomain() } }
+        dao.observeForDay(date.toEpochDay())
+            .map { it.map { e -> e.toDomain() } }
+            .flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
+
+    override fun observeAllInRange(from: LocalDate, to: LocalDate): Flow<List<ActivityLog>> =
+        dao.observeAllInRange(from.toEpochDay(), to.toEpochDay())
+            .map { it.map { e -> e.toDomain() } }
+            .flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
 
     override suspend fun getForActivity(activityId: String): List<ActivityLog> =
         dao.getForActivity(activityId).map { it.toDomain() }
